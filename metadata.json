@@ -1,0 +1,8 @@
+{
+  "name": "iMovie.uz",
+  "description": "A professional movie streaming web platform with Liquid Glass design, featuring trending movies, a custom video player, and a vertical shorts feed.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
