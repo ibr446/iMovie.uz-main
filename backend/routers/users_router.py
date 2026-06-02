@@ -5,8 +5,8 @@ from sqlalchemy import func
 
 from database import get_db
 from models import User, Movie, SavedMovie, WatchHistory
-from schemas import MovieResponse, MovieTitle, MovieDescription, StatsResponse, UserResponse
-from auth import require_auth, require_admin
+from schemas import MovieResponse, MovieTitle, MovieDescription, PasswordUpdate, StatsResponse, UserResponse, UserUpdate
+from auth import require_auth, require_admin, hash_password, verify_password
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -29,6 +29,60 @@ def _movie_to_response(movie: Movie) -> MovieResponse:
         isNew=movie.is_new,
         views=movie.views,
     )
+
+
+def _build_user_response(user: User, db: Session) -> UserResponse:
+    saved = db.query(SavedMovie.movie_id).filter(SavedMovie.user_id == user.id).all()
+    history = db.query(WatchHistory.movie_id).filter(WatchHistory.user_id == user.id).all()
+    return UserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        avatar=user.avatar,
+        role=user.role,
+        savedMovies=[s[0] for s in saved],
+        watchHistory=[h[0] for h in history],
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+def get_profile(user: User = Depends(require_auth), db: Session = Depends(get_db)):
+    """Get the current user's profile."""
+    return _build_user_response(user, db)
+
+
+@router.put("/me", response_model=UserResponse)
+def update_profile(data: UserUpdate, user: User = Depends(require_auth), db: Session = Depends(get_db)):
+    """Update the current user's display profile."""
+    if data.name is not None:
+        name = data.name.strip()
+        if len(name) < 2:
+            raise HTTPException(status_code=400, detail="Name must be at least 2 characters")
+        user.name = name
+
+    if data.avatar is not None:
+        avatar = data.avatar.strip()
+        if avatar and not avatar.startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="Avatar must be a valid URL")
+        user.avatar = avatar or f"https://picsum.photos/seed/{user.email}/100/100"
+
+    db.commit()
+    db.refresh(user)
+    return _build_user_response(user, db)
+
+
+@router.put("/password")
+def update_password(data: PasswordUpdate, user: User = Depends(require_auth), db: Session = Depends(get_db)):
+    """Change the current user's password."""
+    if not verify_password(data.currentPassword, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(data.newPassword) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    user.hashed_password = hash_password(data.newPassword)
+    db.commit()
+    return {"message": "Password updated"}
 
 
 # ── Saved Movies ──────────────────────────────────────────────────
@@ -104,14 +158,43 @@ def add_to_history(movie_id: str, user: User = Depends(require_auth), db: Sessio
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
 
-    entry = WatchHistory(
-        user_id=user.id,
-        movie_id=movie_id,
-        watched_at=datetime.now(timezone.utc),
-    )
-    db.add(entry)
+    existing = db.query(WatchHistory).filter(
+        WatchHistory.user_id == user.id,
+        WatchHistory.movie_id == movie_id,
+    ).first()
+
+    if existing:
+        existing.watched_at = datetime.now(timezone.utc)
+    else:
+        entry = WatchHistory(
+            user_id=user.id,
+            movie_id=movie_id,
+            watched_at=datetime.now(timezone.utc),
+        )
+        db.add(entry)
+
     db.commit()
     return {"message": "Added to watch history"}
+
+
+@router.delete("/history/{movie_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_from_history(movie_id: str, user: User = Depends(require_auth), db: Session = Depends(get_db)):
+    """Remove one movie from the user's watch history."""
+    entry = db.query(WatchHistory).filter(
+        WatchHistory.user_id == user.id,
+        WatchHistory.movie_id == movie_id,
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Movie not in watch history")
+    db.delete(entry)
+    db.commit()
+
+
+@router.delete("/history", status_code=status.HTTP_204_NO_CONTENT)
+def clear_history(user: User = Depends(require_auth), db: Session = Depends(get_db)):
+    """Clear the current user's watch history."""
+    db.query(WatchHistory).filter(WatchHistory.user_id == user.id).delete()
+    db.commit()
 
 
 # ── Admin Stats ───────────────────────────────────────────────────

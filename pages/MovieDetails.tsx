@@ -18,7 +18,7 @@ interface MovieDetailsProps {
 const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate }) => {
   const { lang, t } = useTranslation();
   const { movies } = useMovies();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, refreshUser } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [commentRating, setCommentRating] = useState(5);
@@ -276,6 +276,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                   try {
                     const res = await apiPost<{saved: boolean}>(`/users/saved/${movie.id}`);
                     setIsSaved(res.saved);
+                    await refreshUser().catch(() => {});
                   } catch (err) { console.error(err); }
                   setSavingMovie(false);
                 }}

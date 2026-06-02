@@ -1,13 +1,15 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { apiPost, apiGet } from '../api';
+import { apiPost, apiGet, apiPut } from '../api';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, pass: string) => Promise<boolean>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  updateProfile: (name: string, avatar: string) => Promise<boolean>;
   isAdmin: boolean;
   loading: boolean;
 }
@@ -23,6 +25,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUser = async () => {
+    const userData = await apiGet<User>('/auth/me');
+    setUser(userData);
+  };
 
   // On mount, check if we have a token and fetch user data
   useEffect(() => {
@@ -78,8 +85,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('imovie-token');
   };
 
+  const updateProfile = async (name: string, avatar: string): Promise<boolean> => {
+    try {
+      const updated = await apiPut<User>('/users/me', { name, avatar });
+      setUser(updated);
+      return true;
+    } catch (err) {
+      console.error('Profile update failed:', err);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAdmin: user?.role === 'admin', loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, refreshUser, updateProfile, isAdmin: user?.role === 'admin', loading }}>
       {children}
     </AuthContext.Provider>
   );

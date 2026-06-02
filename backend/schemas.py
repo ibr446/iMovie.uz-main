@@ -16,6 +16,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    avatar: Optional[str] = None
+
+
+class PasswordUpdate(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+
 class UserResponse(BaseModel):
     id: str
     name: str

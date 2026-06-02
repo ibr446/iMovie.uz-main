@@ -105,6 +105,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
     }
 
     apiPost(`/movies/${movie.id}/view`).catch(() => {});
+    apiPost(`/users/history/${movie.id}`).catch(() => {});
   }, [movie.id, videoSrc]);
 
   // Hide controls after inactivity

@@ -443,7 +443,7 @@ const Shorts: React.FC = () => {
                   </div>
                   {isInfoExpanded && <p className="text-xs font-semibold text-white/65">{activeShort.location}</p>}
                 </div>
-              </div>
+              </div>  
 
               <p className={`${isInfoExpanded ? 'line-clamp-2 text-sm' : 'line-clamp-1 text-xs'} font-semibold leading-snug text-white drop-shadow`}>
                 {activeShort.caption}
