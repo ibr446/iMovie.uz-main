@@ -1,8 +1,11 @@
 import mimetypes
 import uvicorn
 import os
+import sys
 import uuid
 from contextlib import asynccontextmanager
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
