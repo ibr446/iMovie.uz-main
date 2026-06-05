@@ -6,7 +6,7 @@ from sqlalchemy import func
 from database import get_db
 from models import User, Movie, SavedMovie, WatchHistory
 from schemas import MovieResponse, MovieTitle, MovieDescription, PasswordUpdate, StatsResponse, UserResponse, UserUpdate
-from auth import require_auth, require_admin, hash_password, verify_password
+from auth import require_auth, require_admin, hash_password, validate_password_strength, verify_password
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -77,8 +77,7 @@ def update_password(data: PasswordUpdate, user: User = Depends(require_auth), db
     if not verify_password(data.currentPassword, user.hashed_password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
-    if len(data.newPassword) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    validate_password_strength(data.newPassword)
 
     user.hashed_password = hash_password(data.newPassword)
     db.commit()

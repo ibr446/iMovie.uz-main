@@ -97,8 +97,8 @@ const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
   };
 
   const handleChangePassword = async () => {
-    if (passwordForm.newPassword.length < 6) {
-      showMessage('error', 'New password must be at least 6 characters.');
+    if (passwordForm.newPassword.length < 8) {
+      showMessage('error', 'New password must be at least 8 characters.');
       return;
     }
 
@@ -117,7 +117,7 @@ const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
       showMessage('success', 'Password updated.');
     } catch (err) {
       console.error('Password update failed:', err);
-      showMessage('error', 'Current password is incorrect.');
+      showMessage('error', err instanceof Error ? err.message : 'Password could not be updated.');
     }
   };
 

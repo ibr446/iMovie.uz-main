@@ -8,6 +8,7 @@ import { useMovies } from '../context/MovieContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 import { apiGet, apiPost, apiPut, apiDelete } from '../api';
+import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../utils/movieImages';
 
 interface MovieDetailsProps {
   movie: Movie;
@@ -40,6 +41,9 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
   const [shareMsg, setShareMsg] = useState('');
   
   const similarMovies = movies.filter(m => m.id !== movie.id && m.genre.some(g => movie.genre.includes(g))).slice(0, 4);
+  const heroImage = getMovieHeroImage(movie);
+  const isLocalHero = heroImage === getLocalMovieBackdrop(movie);
+  const isPosterHero = !isLocalHero && (heroImage === movie.poster || isGenericMovieImage(movie.backdrop));
 
   // Check if movie is saved
   useEffect(() => {
@@ -256,15 +260,33 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
   return (
     <div className="min-h-screen bg-zinc-950 text-white animate-in fade-in duration-700">
       {/* Hero Backdrop */}
-      <div className="relative h-[60vh] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10" />
-        <img src={movie.backdrop} alt={movie.title[lang]} className="w-full h-full object-cover scale-105" />
+      <div className="relative h-[62vh] overflow-hidden bg-zinc-950">
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-zinc-950 via-zinc-950/35 to-black/20" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/25 to-black/40" />
+        <img
+          src={heroImage}
+          alt={movie.title[lang]}
+          className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
+          onError={(event) => {
+            if (movie.poster && event.currentTarget.src !== movie.poster) {
+              event.currentTarget.src = movie.poster;
+            }
+          }}
+        />
+        {isPosterHero && movie.poster && (
+          <img
+            src={movie.poster}
+            alt=""
+            aria-hidden="true"
+            className="absolute right-[8%] top-1/2 hidden h-[82%] -translate-y-1/2 rotate-3 rounded-3xl object-cover opacity-20 shadow-2xl md:block"
+          />
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-64 relative z-20">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Poster */}
-          <div className="w-full lg:w-80 shrink-0">
+          <div className="w-full lg:w-96 shrink-0">
             <div className="rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 aspect-[2/3]">
               <img src={movie.poster} alt={movie.title[lang]} className="w-full h-full object-cover" />
             </div>

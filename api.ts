@@ -3,8 +3,9 @@
  * Centralized API helper for communicating with the FastAPI backend.
  */
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api`;
-// Automatically uses same hostname as browser (localhost or 127.0.0.1)
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? '/api' : `http://${window.location.hostname}:8000/api`);
 
 function getToken(): string | null {
   return localStorage.getItem('imovie-token');
@@ -21,7 +22,11 @@ function authHeaders(): Record<string, string> {
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Network error' }));
-    throw new Error(error.detail || `HTTP ${response.status}`);
+    const detail = error.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((item) => item.msg || item.message || String(item)).join(' ')
+      : detail;
+    throw new Error(message || `HTTP ${response.status}`);
   }
   // Handle 204 No Content
   if (response.status === 204) {

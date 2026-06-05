@@ -16,6 +16,10 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLogin(BaseModel):
+    credential: str
+
+
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     avatar: Optional[str] = None

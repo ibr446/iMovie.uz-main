@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from database import engine, SessionLocal, Base
 from models import User, Movie, ShortVideo
@@ -23,6 +24,8 @@ from routers.shorts_router import router as shorts_router
 
 
 CHUNK_SIZE = 1024 * 1024
+DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist"))
+DIST_ASSETS_DIR = os.path.join(DIST_DIR, "assets")
 
 
 def iter_file_range(file_path: str, start: int, end: int):
@@ -463,6 +466,9 @@ app.include_router(comments_router)
 app.include_router(users_router)
 app.include_router(shorts_router)
 
+if os.path.isdir(DIST_ASSETS_DIR):
+    app.mount("/assets", StaticFiles(directory=DIST_ASSETS_DIR), name="assets")
+
 
 # ── Movie streaming with byte range support ───────────────────────
 MOVIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Movies")
@@ -505,6 +511,10 @@ if os.path.exists(SHORTS_DIR_ABS):
 # ── Root endpoint ─────────────────────────────────────────────────
 @app.get("/")
 def root():
+    index_path = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
     return {
         "name": "iMovie.uz API",
         "version": "1.0.0",
@@ -515,3 +525,19 @@ def root():
 
 
     
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def serve_frontend(full_path: str):
+    reserved_prefixes = ("api/", "media/", "short-videos/", "docs", "openapi.json")
+    if full_path.startswith(reserved_prefixes):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    requested_file = os.path.abspath(os.path.join(DIST_DIR, full_path))
+    if requested_file.startswith(DIST_DIR + os.sep) and os.path.isfile(requested_file):
+        return FileResponse(requested_file)
+
+    index_path = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
+    raise HTTPException(status_code=404, detail="Frontend build not found")

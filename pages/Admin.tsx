@@ -31,8 +31,8 @@ const AdminPanel: React.FC = () => {
     year: new Date().getFullYear(),
     rating: 0,
     views: 0,
-    poster: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80',
-    backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
+    poster: '',
+    backdrop: '',
     videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
     duration: '1h 30m',
     country: 'USA'
@@ -325,6 +325,7 @@ const AdminPanel: React.FC = () => {
                   <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Poster URL</label>
                   <input 
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="Movie poster image URL"
                     value={newMovie.poster}
                     onChange={e => setNewMovie({ ...newMovie, poster: e.target.value })}
                   />
@@ -333,6 +334,7 @@ const AdminPanel: React.FC = () => {
                   <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Backdrop URL</label>
                   <input 
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="Optional wide movie image URL"
                     value={newMovie.backdrop}
                     onChange={e => setNewMovie({ ...newMovie, backdrop: e.target.value })}
                   />

@@ -4,6 +4,7 @@ import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Movie } from '../types';
 import GlassButton from './GlassButton';
 import { useTranslation } from '../context/LanguageContext';
+import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../utils/movieImages';
 
 interface HeroCarouselProps {
   movies: Movie[];
@@ -30,9 +31,36 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies, onPlay, onInfo }) =
           key={movie.id}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100' : 'opacity-0'}`}
         >
+          {(() => {
+            const heroImage = getMovieHeroImage(movie);
+            const isLocalHero = heroImage === getLocalMovieBackdrop(movie);
+            const isPosterHero = !isLocalHero && (heroImage === movie.poster || isGenericMovieImage(movie.backdrop));
+
+            return (
+              <>
+                <img
+                  src={heroImage}
+                  alt={movie.title[lang]}
+                  className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
+                  onError={(event) => {
+                    if (movie.poster && event.currentTarget.src !== movie.poster) {
+                      event.currentTarget.src = movie.poster;
+                    }
+                  }}
+                />
+                {isPosterHero && movie.poster && (
+                  <img
+                    src={movie.poster}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute right-[10%] top-1/2 hidden h-[72%] -translate-y-1/2 rotate-3 rounded-3xl object-cover opacity-25 shadow-2xl lg:block"
+                  />
+                )}
+              </>
+            );
+          })()}
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent z-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
-          <img src={movie.backdrop} alt={movie.title[lang]} className="w-full h-full object-cover scale-105" />
         </div>
       ))}
 

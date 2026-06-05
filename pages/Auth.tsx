@@ -1,48 +1,114 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Lock, User as UserIcon, ArrowRight, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 import GlassButton from '../components/GlassButton';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: { client_id: string; callback: (response: { credential?: string }) => void }) => void;
+          renderButton: (element: HTMLElement, options: Record<string, unknown>) => void;
+        };
+      };
+    };
+  }
+}
 
 interface AuthProps {
   onSuccess: () => void;
 }
 
 const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
-  const { login, register } = useAuth();
+  const { login, register, googleLogin } = useAuth();
   const { t } = useTranslation();
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return;
+
+    const renderGoogleButton = () => {
+      if (!window.google || !googleButtonRef.current) return;
+      googleButtonRef.current.innerHTML = '';
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (response) => {
+          if (!response.credential) {
+            setError('Google login failed.');
+            return;
+          }
+          setLoading(true);
+          setError('');
+          const result = await googleLogin(response.credential);
+          setLoading(false);
+          if (result.ok) {
+            onSuccess();
+          } else {
+            setError(result.error || 'Google login failed.');
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        type: 'standard',
+        shape: 'pill',
+        text: isLogin ? 'signin_with' : 'signup_with',
+        width: googleButtonRef.current.offsetWidth || 320,
+      });
+    };
+
+    if (window.google) {
+      renderGoogleButton();
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', renderGoogleButton, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButton;
+    script.onerror = () => setError('Google login could not be loaded.');
+    document.head.appendChild(script);
+  }, [googleClientId, googleLogin, isLogin, onSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
-    let success: boolean;
+    let result: { ok: boolean; error?: string };
     if (isLogin) {
-      success = await login(email, password);
+      result = await login(email, password);
     } else {
       if (!name.trim()) {
         setError('Please enter your name');
         setLoading(false);
         return;
       }
-      success = await register(name, email, password);
+      result = await register(name, email, password);
     }
 
-    if (success) {
+    if (result.ok) {
       onSuccess();
     } else {
-      setError(isLogin 
-        ? 'Invalid credentials. Try: admin@imovie.uz / admin123' 
-        : 'Registration failed. Email may already be in use.'
-      );
+      setError(result.error || (isLogin ? 'Invalid credentials' : 'Registration failed.'));
     }
     setLoading(false);
   };
@@ -95,10 +161,11 @@ const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
                 placeholder="Password" 
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
                 required
-                minLength={4}
+                minLength={isLogin ? 1 : 8}
               />
             </div>
 
+            {/* {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>} */}
             {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>}
 
             <GlassButton 
@@ -110,6 +177,12 @@ const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
               {!loading && <ArrowRight size={20} />}
             </GlassButton>
           </form>
+
+          {googleClientId && (
+            <div className="mt-5">
+              <div ref={googleButtonRef} className="flex min-h-11 justify-center" />
+            </div>
+          )}
 
           <div className="mt-8 text-center">
             <button 
