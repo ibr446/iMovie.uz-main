@@ -19,8 +19,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
-import { apiDelete, apiGet, apiPut } from '../api';
-import { Movie } from '../types';
+import { apiDelete, apiGet, apiPut } from '../../api';
+import { Movie } from '../../types';
 import MovieCard from '../components/MovieCard';
 
 interface ProfileProps {

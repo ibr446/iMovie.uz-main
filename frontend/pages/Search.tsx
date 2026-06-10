@@ -4,9 +4,9 @@ import { Search as SearchIcon, SlidersHorizontal, X } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
 import MovieCard from '../components/MovieCard';
 import { useTranslation } from '../context/LanguageContext';
-import { Movie } from '../types';
-import { apiGet } from '../api';
-import { movieCategories } from '../data/categories';
+import { Movie } from '../../types';
+import { apiGet } from '../../api';
+import { movieCategories } from '../../data/categories';
 
 interface SearchProps {
   onMovieClick: (id: string) => void;

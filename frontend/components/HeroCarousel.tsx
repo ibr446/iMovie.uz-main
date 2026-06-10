@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Movie } from '../types';
+import { Movie } from '../../types';
 import GlassButton from './GlassButton';
 import { useTranslation } from '../context/LanguageContext';
-import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../utils/movieImages';
+import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../../utils/movieImages';
 
 interface HeroCarouselProps {
   movies: Movie[];

@@ -14,7 +14,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
-import { apiGet, apiPost } from '../api';
+import { apiGet, apiPost } from '../../api';
 
 interface ShortItem {
   id: string;
@@ -56,7 +56,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 3,
     shares: 842,
     views: 118000,
-    videoUrl: firstShortVideoUrl,
+    videoUrl: "1.mp4",
     caption: "The Cosmic Horizon sahnasidan maxsus lavha. Katta ekranga tayyormisiz?",
     audio: 'iMovie.uz Original Sound',
     location: 'Tashkent',
@@ -71,7 +71,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 2100,
     views: 540000,
-    videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    videoUrl: 'football.mp4',
     caption: "Aktyorlar kulgudan sahnani tugata olmagan payt. Bu kadrni ko'ring!",
     audio: 'Comedy Club Tashkent - Bloopers',
     location: 'Samarkand',
@@ -86,7 +86,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 1600,
     views: 276000,
-    videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    videoUrl: 'videoplayback(1).mp4',
     caption: "Eng kuchli trailer momentlari bir joyda. Saqlab qo'ying.",
     audio: 'Epic Trailer Mix',
     location: 'Bukhara',

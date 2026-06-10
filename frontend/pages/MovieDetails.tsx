@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Download, Share2, Plus, Star, Calendar, Clock, Globe, Send, Trash2, X, Check, Pencil, CornerDownRight, BookmarkPlus, BookmarkCheck } from 'lucide-react';
-import { Movie, Comment } from '../types';
+import { Movie, Comment } from '../../types';
 import GlassButton from '../components/GlassButton';
 import MovieCard from '../components/MovieCard';
 import { useMovies } from '../context/MovieContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
-import { apiGet, apiPost, apiPut, apiDelete } from '../api';
-import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../utils/movieImages';
+import { apiGet, apiPost, apiPut, apiDelete } from '../../api';
+import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../../utils/movieImages';
 
 interface MovieDetailsProps {
   movie: Movie;

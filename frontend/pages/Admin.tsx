@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Eye, TrendingUp, Users, Film, X, Save } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
-import { Movie, Language } from '../types';
+import { Movie, Language } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
 import GlassButton from '../components/GlassButton';
-import { apiGet } from '../api';
+import { apiGet } from '../../api';
 
 interface StatsData {
   totalMovies: number;

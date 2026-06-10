@@ -1,19 +1,19 @@
 
 import React, { useState } from 'react';
-import { ThemeProvider } from './context/ThemeContext';
-import { LanguageProvider } from './context/LanguageContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { MovieProvider, useMovies } from './context/MovieContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import MovieDetails from './pages/MovieDetails';
-import Watch from './pages/Watch';
-import Shorts from './pages/Shorts';
-import Search from './pages/Search';
-import Profile from './pages/Profile';
-import Auth from './pages/Auth';
-import AdminPanel from './pages/Admin';
+import { ThemeProvider } from './frontend/context/ThemeContext';
+import { LanguageProvider } from './frontend/context/LanguageContext';
+import { AuthProvider, useAuth } from './frontend/context/AuthContext';
+import { MovieProvider, useMovies } from './frontend/context/MovieContext';
+import Navbar from './frontend/components/Navbar';
+import Footer from './frontend/components/Footer';
+import Home from './frontend/pages/Home';
+import MovieDetails from './frontend/pages/MovieDetails';
+import Watch from './frontend/pages/Watch';
+import Shorts from './frontend/pages/Shorts';
+import Search from './frontend/pages/Search';
+import Profile from './frontend/pages/Profile';
+import Auth from './frontend/pages/Auth';
+import AdminPanel from './frontend/pages/Admin';
 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');

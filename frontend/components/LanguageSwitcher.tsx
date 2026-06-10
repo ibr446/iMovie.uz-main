@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../context/LanguageContext';
-import { Language } from '../types';
+import { Language } from '../../types';
 
 const LanguageSwitcher: React.FC = () => {
   const { lang, setLang } = useTranslation();

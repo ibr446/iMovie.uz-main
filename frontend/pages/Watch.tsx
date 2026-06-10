@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, Play, Pause, Volume2, Settings, Maximize2, Minimize2, SkipForward, SkipBack, VolumeX, X, Subtitles, Gauge } from 'lucide-react';
-import { Movie } from '../types';
+import { Movie } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
-import { apiPost } from '../api';
+import { apiPost } from '../../api';
 
 interface WatchProps {
   movie: Movie;

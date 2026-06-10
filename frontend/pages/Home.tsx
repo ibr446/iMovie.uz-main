@@ -16,7 +16,7 @@ import { useMovies } from '../context/MovieContext';
 import HeroCarousel from '../components/HeroCarousel';
 import MovieCard from '../components/MovieCard';
 import { useTranslation } from '../context/LanguageContext';
-import { movieCategories, MovieCategory } from '../data/categories';
+import { movieCategories, MovieCategory } from '../../data/categories';
 
 interface HomeProps {
   onMovieClick: (id: string) => void;

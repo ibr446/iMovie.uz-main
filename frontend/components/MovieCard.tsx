@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Star, PlayCircle } from 'lucide-react';
-import { Movie } from '../types';
+import { Movie } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
 
 interface MovieCardProps {

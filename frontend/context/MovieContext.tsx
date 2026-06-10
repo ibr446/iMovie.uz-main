@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Movie } from '../types';
-import { apiGet, apiPost, apiPut, apiDelete } from '../api';
+import { Movie } from '../../types';
+import { apiGet, apiPost, apiPut, apiDelete } from '../../api';
 
 interface MovieContextType {
   movies: Movie[];
