@@ -467,6 +467,26 @@ def sync_deployed_content():
                 "is_new": True,
                 "views": 18,
             },
+            {
+                "id": "avengers-local-2",
+                "title_en": "Avengers",
+                "title_ru": "Мстители",
+                "title_uz": "Qasoskorlar",
+                "description_en": "Earth's mightiest heroes assemble to stop a dangerous enemy and protect the world from an alien invasion.",
+                "description_ru": "Величайшие герои Земли объединяются, чтобы остановить опасного врага и защитить мир от вторжения пришельцев.",
+                "description_uz": "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
+                "poster": "/photos/01-avengers-2012.webp",
+                "backdrop": "/photos/maxresdefault.jpg",
+                "video_url": "Avengers.mp4",
+                "year": 2012,
+                "genre": ["Action", "Adventure"],
+                "rating": 8.0,
+                "duration": "2h 23m",
+                "country": "USA",
+                "is_trending": True,
+                "is_new": False,
+                "views": 0,
+            },
         ]
 
         for data in movies_data:
