@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Movie } from '../../types';
 import { apiGet, apiPost, apiPut, apiDelete } from '../../api';
+import { movies as fallbackMovies } from '../../data/movies';
 
 interface MovieContextType {
   movies: Movie[];
@@ -16,14 +17,16 @@ interface MovieContextType {
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
 
 export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [movies, setMovies] = useState<Movie[]>(fallbackMovies);
   const [loading, setLoading] = useState(true);
 
   const fetchMovies = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiGet<Movie[]>('/movies');
-      setMovies(data);
+      if (data.length > 0) {
+        setMovies(data);
+      }
     } catch (err) {
       console.error('Failed to fetch movies:', err);
     } finally {

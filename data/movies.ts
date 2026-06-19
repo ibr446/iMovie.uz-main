@@ -1,52 +1,76 @@
-
 import { Movie } from '../types';
 
 export const movies: Movie[] = [
   {
-    id: '1',
+    id: 'avengers-local-2',
     title: {
-      en: 'The Cosmic Horizon',
-      ru: 'Космический Горизонт',
-      uz: 'Koinot Gorizonti'
+      en: 'Avengers',
+      ru: 'Мстители',
+      uz: 'Qasoskorlar',
     },
-    poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80',
-    backdrop: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1600&q=80',
-    videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
-    year: 2024,
-    genre: ['Sci-Fi', 'Adventure'],
-    rating: 8.9,
     description: {
-      en: 'An intrepid crew of explorers embarks on a journey beyond the edge of the known universe.',
-      ru: 'Отважная команда исследователей отправляется в путешествие за край известной вселенной.',
-      uz: 'Jasur tadqiqotchilar jamoasi ma\'lum koinot chekkasidan tashqariga sayohatga chiqadi.'
+      en: "Earth's mightiest heroes assemble to stop a dangerous enemy and protect the world from an alien invasion.",
+      ru: 'Величайшие герои Земли объединяются, чтобы остановить опасного врага и защитить мир от вторжения пришельцев.',
+      uz: "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
     },
-    duration: '2h 15m',
+    poster: '/photos/01-avengers-2012.webp',
+    backdrop: '/photos/maxresdefault.jpg',
+    videoUrl: 'Avengers.mp4',
+    year: 2012,
+    genre: ['Action', 'Adventure'],
+    rating: 8,
+    duration: '2h 23m',
     country: 'USA',
     isTrending: true,
-    isNew: true,
-    views: 125430
+    isNew: false,
+    views: 0,
   },
   {
-    id: '2',
+    id: '282b83943421',
     title: {
-      en: 'Midnight in Tashkent',
-      ru: 'Полночь в Ташкенте',
-      uz: 'Toshkentda yarim tun'
+      en: 'SocialLink',
+      ru: 'СоцСвязь',
+      uz: 'Dastur',
     },
-    poster: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80',
-    backdrop: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1600&q=80',
-    videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
-    year: 2023,
-    genre: ['Drama', 'Mystery'],
-    rating: 7.5,
     description: {
-      en: 'A detective is pulled into a web of conspiracy in the heart of Uzbekistan.',
-      ru: 'Детектив оказывается втянут в паутину заговора в самом сердце Узбекистана.',
-      uz: 'Detektiv O\'zbekiston markazida fitna to\'riga tushib qoladi.'
+      en: 'ConnectMe is a modern social media application where users can create profiles, follow each other, like posts, write comments, share content, and save favorite posts.',
+      ru: 'СвяжиМеня - современное приложение социальной сети для профилей, подписок, лайков, комментариев, публикаций и сохранения постов.',
+      uz: "MeniBog'la - foydalanuvchilar profil yaratishi, kuzatishi, layk bosishi, kommentariya yozishi, ulashishi va postlarni saqlashi mumkin bo'lgan zamonaviy ijtimoiy tarmoq dasturi.",
     },
-    duration: '1h 50m',
-    country: 'Uzbekistan',
+    poster: 'https://img.kinochilar.com/uploads/posts/1732659724-2098248055-dastur-kinochilar-com.jpg',
+    backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
+    videoUrl: 'Dastur_720.mp4',
+    year: 2023,
+    genre: ['Fantastic'],
+    rating: 10,
+    duration: '1h 41m',
+    country: 'Kazakh',
     isTrending: true,
-    views: 89020
-  }
+    isNew: true,
+    views: 18,
+  },
+  {
+    id: '27bdd5ff1829',
+    title: {
+      en: 'Avengers ',
+      ru: 'Мстители',
+      uz: 'Qasoskorlar',
+    },
+    description: {
+      en: 'When Loki threatens Earth, Nick Fury brings together Iron Man, Captain America, Thor, Hulk, Black Widow, and Hawkeye to form the Avengers.',
+      ru: 'Когда Локи угрожает Земле, Ник Фьюри собирает Железного человека, Капитана Америку, Тора, Халка, Чёрную вдову и Соколиного глаза.',
+      uz: "Loki Yerga tahdid solganda, Nik Fyuri Iron Man, Kapitan Amerika, Tor, Halk, Black Widow va Hawkeye kabi qahramonlarni bir jamoaga yig'adi.",
+    },
+    poster: 'https://m.media-amazon.com/images/M/MV5BNGE0YTVjNzUtNzJjOS00NGNlLTgxMzctZTY4YTE1Y2Y1ZTU4XkEyXkFqcGc@._V1_.jpg',
+    backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
+    videoUrl: 'Avenger.mp4',
+    year: 2012,
+    genre: ['Action'],
+    rating: 0,
+    duration: '2h 23 m',
+    country: 'USA',
+    isTrending: false,
+    isNew: true,
+    views: 68,
+  },
 ];
