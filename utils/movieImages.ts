@@ -6,13 +6,29 @@ const GENERIC_IMAGE_HOSTS = [
   'picsum.photos',
 ];
 
-const LOCAL_BACKDROPS = [
+type BackdropRule = {
+  patterns: string[];
+  image: string;
+};
+
+const DESKTOP_BACKDROPS: BackdropRule[] = [
   {
-    patterns: ['avengers', 'мстители'],
+    patterns: ['avengers', 'qasoskorlar'],
+    image: '/photos/01-avengers-2012.webp',
+  },
+  {
+    patterns: ['dastur', 'sociallink'],
+    image: '/photos/maxresdefault.jpg',
+  },
+];
+
+const MOBILE_BACKDROPS: BackdropRule[] = [
+  {
+    patterns: ['avengers', 'qasoskorlar'],
     image: '/photos/The_Avengers_(2012_film)_poster.jpg',
   },
   {
-    patterns: ['dastur', 'дастур'],
+    patterns: ['dastur', 'sociallink'],
     image: '/photos/dastur.webp',
   },
 ];
@@ -23,7 +39,12 @@ function getMovieSearchText(movie: Movie): string {
 
 export function getLocalMovieBackdrop(movie: Movie): string {
   const text = getMovieSearchText(movie);
-  return LOCAL_BACKDROPS.find(item => item.patterns.some(pattern => text.includes(pattern)))?.image || '';
+  return DESKTOP_BACKDROPS.find(item => item.patterns.some(pattern => text.includes(pattern)))?.image || '';
+}
+
+export function getLocalMovieMobileBackdrop(movie: Movie): string {
+  const text = getMovieSearchText(movie);
+  return MOBILE_BACKDROPS.find(item => item.patterns.some(pattern => text.includes(pattern)))?.image || '';
 }
 
 export function isGenericMovieImage(url?: string): boolean {
@@ -51,4 +72,8 @@ export function getMovieHeroImage(movie: Movie): string {
   }
 
   return poster || backdrop || '';
+}
+
+export function getMovieMobileHeroImage(movie: Movie): string {
+  return getLocalMovieMobileBackdrop(movie) || getMovieHeroImage(movie);
 }

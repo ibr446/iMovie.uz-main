@@ -8,7 +8,7 @@ import { useMovies } from '../context/MovieContext';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 import { apiGet, apiPost, apiPut, apiDelete } from '../../api';
-import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../../utils/movieImages';
+import { getLocalMovieBackdrop, getMovieHeroImage, getMovieMobileHeroImage, isGenericMovieImage } from '../../utils/movieImages';
 
 interface MovieDetailsProps {
   movie: Movie;
@@ -42,6 +42,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
   
   const similarMovies = movies.filter(m => m.id !== movie.id && m.genre.some(g => movie.genre.includes(g))).slice(0, 4);
   const heroImage = getMovieHeroImage(movie);
+  const mobileHeroImage = getMovieMobileHeroImage(movie);
   const isLocalHero = heroImage === getLocalMovieBackdrop(movie);
   const isPosterHero = !isLocalHero && (heroImage === movie.poster || isGenericMovieImage(movie.backdrop));
 
@@ -263,16 +264,19 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
       <div className="relative h-[54vh] min-h-[430px] overflow-hidden bg-zinc-950 md:h-[62vh]">
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-zinc-950 via-zinc-950/35 to-black/20" />
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/25 to-black/40" />
-        <img
-          src={heroImage}
-          alt={movie.title[lang]}
-          className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
-          onError={(event) => {
-            if (movie.poster && event.currentTarget.src !== movie.poster) {
-              event.currentTarget.src = movie.poster;
-            }
-          }}
-        />
+        <picture className="block h-full w-full">
+          <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
+          <img
+            src={heroImage}
+            alt={movie.title[lang]}
+            className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
+            onError={(event) => {
+              if (movie.poster && event.currentTarget.src !== movie.poster) {
+                event.currentTarget.src = movie.poster;
+              }
+            }}
+          />
+        </picture>
         {isPosterHero && movie.poster && (
           <img
             src={movie.poster}

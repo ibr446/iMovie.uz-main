@@ -4,7 +4,7 @@ import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Movie } from '../../types';
 import GlassButton from './GlassButton';
 import { useTranslation } from '../context/LanguageContext';
-import { getLocalMovieBackdrop, getMovieHeroImage, isGenericMovieImage } from '../../utils/movieImages';
+import { getLocalMovieBackdrop, getMovieHeroImage, getMovieMobileHeroImage, isGenericMovieImage } from '../../utils/movieImages';
 
 interface HeroCarouselProps {
   movies: Movie[];
@@ -34,21 +34,25 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies, onPlay, onInfo }) =
         >
           {(() => {
             const heroImage = getMovieHeroImage(movie);
+            const mobileHeroImage = getMovieMobileHeroImage(movie);
             const isLocalHero = heroImage === getLocalMovieBackdrop(movie);
             const isPosterHero = !isLocalHero && (heroImage === movie.poster || isGenericMovieImage(movie.backdrop));
 
             return (
               <>
-                <img
-                  src={heroImage}
-                  alt={movie.title[lang]}
-                  className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
-                  onError={(event) => {
-                    if (movie.poster && event.currentTarget.src !== movie.poster) {
-                      event.currentTarget.src = movie.poster;
-                    }
-                  }}
-                />
+                <picture className="block h-full w-full">
+                  <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
+                  <img
+                    src={heroImage}
+                    alt={movie.title[lang]}
+                    className={`h-full w-full object-cover ${isPosterHero ? 'scale-125 blur-xl opacity-80' : 'scale-105'}`}
+                    onError={(event) => {
+                      if (movie.poster && event.currentTarget.src !== movie.poster) {
+                        event.currentTarget.src = movie.poster;
+                      }
+                    }}
+                  />
+                </picture>
                 {isPosterHero && movie.poster && (
                   <img
                     src={movie.poster}
