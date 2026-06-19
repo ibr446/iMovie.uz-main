@@ -9,11 +9,11 @@ const GENERIC_IMAGE_HOSTS = [
 const LOCAL_BACKDROPS = [
   {
     patterns: ['avengers', 'мстители'],
-    image: '/photos/01-avengers-2012.webp',
+    image: '/photos/The_Avengers_(2012_film)_poster.jpg',
   },
   {
     patterns: ['dastur', 'дастур'],
-    image: '/photos/maxresdefault.jpg',
+    image: '/photos/dastur.webp',
   },
 ];
 
