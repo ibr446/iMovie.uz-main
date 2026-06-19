@@ -74,6 +74,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   
   // Buffering
   const [buffered, setBuffered] = useState(0);
+  const [videoError, setVideoError] = useState('');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -96,6 +97,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
     setCurrentTime(0);
     setDuration(0);
     setBuffered(0);
+    setVideoError('');
 
     if (video) {
       video.playbackRate = playbackSpeed;
@@ -255,6 +257,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
     if (videoRef.current) {
       const videoDuration = videoRef.current.duration;
       setDuration(Number.isFinite(videoDuration) && videoDuration > 0 ? videoDuration : 0);
+      setVideoError('');
     }
   };
 
@@ -376,8 +379,34 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
+        onError={() => {
+          setIsPlaying(false);
+          setVideoError('Video fayl topilmadi yoki storage link ishlamayapti.');
+        }}
         playsInline
       />
+
+      {videoError && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 px-6">
+          <div className="max-w-lg rounded-2xl border border-white/10 bg-zinc-950/95 p-6 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-red-300">
+              <X size={28} />
+            </div>
+            <h2 className="text-2xl font-black text-white">Video ochilmadi</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">{videoError}</p>
+            <p className="mt-3 break-all rounded-xl bg-white/5 px-4 py-3 text-xs text-zinc-400">
+              {movie.videoUrl}
+            </p>
+            <button
+              type="button"
+              onClick={onBack}
+              className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-zinc-200"
+            >
+              Orqaga
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Subtitle Display */}
       {currentSubtitle && (

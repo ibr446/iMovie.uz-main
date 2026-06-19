@@ -565,10 +565,16 @@ MOVIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Mov
 MOVIES_DIR_ABS = os.path.abspath(MOVIES_DIR)
 SHORTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "shorts")
 SHORTS_DIR_ABS = os.path.abspath(SHORTS_DIR)
+DEMO_VIDEO_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 
 
 def video_url_from_env(env_name: str, local_filename: str) -> str:
-    return os.getenv(env_name, local_filename).strip() or local_filename
+    hosted_url = os.getenv(env_name, "").strip()
+    if hosted_url:
+        return hosted_url
+    if os.getenv("VERCEL"):
+        return DEMO_VIDEO_URL
+    return local_filename
 
 
 @app.get("/media/{filename:path}")
