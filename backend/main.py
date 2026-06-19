@@ -419,6 +419,75 @@ def seed_shorts():
         db.close()
 
 
+def sync_deployed_content():
+    """Replace demo seed movies with the project's current movie catalog."""
+    db = SessionLocal()
+    try:
+        demo_movie_ids = [str(index) for index in range(1, 9)]
+        db.query(Movie).filter(Movie.id.in_(demo_movie_ids)).delete(synchronize_session=False)
+
+        movies_data = [
+            {
+                "id": "27bdd5ff1829",
+                "title_en": "Avengers ",
+                "title_ru": "Мстители",
+                "title_uz": "Qasoskorlar",
+                "description_en": "When a dangerous enemy named Loki threatens Earth, Nick Fury brings together Iron Man, Captain America, Thor, Hulk, Black Widow, and Hawkeye to form the Avengers. At first, the heroes struggle to work as a team, but they soon unite to stop a massive alien invasion and save New York City. The movie is full of action, humor, and epic battles.",
+                "description_ru": "Когда опасный враг по имени Локи угрожает Земле, Ник Фьюри собирает команду супергероев: Железного человека, Капитана Америку, Тора, Халка, Чёрную вдову и Соколиного глаза. Сначала героям трудно работать вместе, но позже они объединяются, чтобы остановить масштабное вторжение пришельцев и спасти Нью-Йорк. Фильм наполнен экшеном, юмором и зрелищными битвами.",
+                "description_uz": "Loki ismli xavfli dushman Yerga tahdid solganda, Nik Fyuri Iron Man, Kapitan Amerika, Tor, Halk, Black Widow va Hawkeye kabi qahramonlarni bir jamoaga yig'adi. Dastlab ular bir-biri bilan chiqisha olmaydi, ammo keyinchalik birlashib, ulkan begona mavjudotlar hujumini to'xtatishga va Nyu-York shahrini saqlab qolishga harakat qilishadi. Film jangovar sahnalar, hazil va epik urushlarga boy.",
+                "poster": "https://m.media-amazon.com/images/M/MV5BNGE0YTVjNzUtNzJjOS00NGNlLTgxMzctZTY4YTE1Y2Y1ZTU4XkEyXkFqcGc@._V1_.jpg",
+                "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
+                "video_url": "Avenger.mp4",
+                "year": 2012,
+                "genre": ["Action"],
+                "rating": 0.0,
+                "duration": "2h 23 m",
+                "country": "USA",
+                "is_trending": False,
+                "is_new": True,
+                "views": 68,
+            },
+            {
+                "id": "282b83943421",
+                "title_en": "SocialLink",
+                "title_ru": "СоцСвязь",
+                "title_uz": "Dastur",
+                "description_en": "ConnectMe is a modern social media application where users can create their own profiles, follow each other, like posts, write comments, reply to comments, share content, and save favorite posts. The app is designed to make communication simple, fast, and interactive. Users can connect with friends, discover new people, and manage their personal social space in one platform.",
+                "description_ru": "СвяжиМеня - это современное приложение социальной сети, где пользователи могут создавать свои профили, подписываться друг на друга, ставить лайки, писать комментарии, отвечать на комментарии, делиться публикациями и сохранять понравившиеся посты. Приложение создано для удобного, быстрого и интерактивного общения. Пользователи могут находить друзей, знакомиться с новыми людьми и управлять своим личным социальным пространством на одной платформе.",
+                "description_uz": "MeniBog'la - bu zamonaviy ijtimoiy tarmoq dasturi bo'lib, unda foydalanuvchilar o'z profilini yaratishi, bir-birini kuzatishi, postlarga layk bosishi, kommentariya yozishi, kommentariyalarga javob berishi, postlarni ulashishi va saqlab qo'yishi mumkin. Dastur muloqotni oson, tez va qiziqarli qilish uchun yaratilgan. Foydalanuvchilar do'stlari bilan bog'lanishi, yangi insonlarni topishi va o'z ijtimoiy sahifasini boshqarishi mumkin.",
+                "poster": "https://img.kinochilar.com/uploads/posts/1732659724-2098248055-dastur-kinochilar-com.jpg",
+                "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
+                "video_url": "Dastur_720.mp4",
+                "year": 2023,
+                "genre": ["Fantastic"],
+                "rating": 10.0,
+                "duration": "1h 41m",
+                "country": "Kazakh",
+                "is_trending": True,
+                "is_new": True,
+                "views": 18,
+            },
+        ]
+
+        for data in movies_data:
+            movie = db.query(Movie).filter(Movie.id == data["id"]).first()
+            if not movie:
+                movie = Movie(id=data["id"])
+                db.add(movie)
+
+            for field, value in data.items():
+                if field != "id":
+                    setattr(movie, field, value)
+
+        db.commit()
+        print(f"Synced {len(movies_data)} deployed movies")
+    except Exception as e:
+        print(f"Deployed content sync error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: create tables and seed data on startup."""
@@ -427,6 +496,7 @@ async def lifespan(app: FastAPI):
     # Seed initial data
     seed_database()
     seed_shorts()
+    sync_deployed_content()
     print("iMovie.uz Backend is running!")
     print("API Docs: http://localhost:8000/docs")
     yield
