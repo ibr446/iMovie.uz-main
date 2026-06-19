@@ -80,7 +80,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   const controlsTimerRef = useRef<number | null>(null);
   const videoSrc = useMemo(() => {
     const rawUrl = movie.videoUrl.trim();
-    const backendOrigin = `http://${window.location.hostname}:8000`;
+    const backendOrigin = import.meta.env.PROD ? '' : `http://${window.location.hostname}:8000`;
 
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     if (rawUrl.startsWith('/')) return `${backendOrigin}${rawUrl}`;

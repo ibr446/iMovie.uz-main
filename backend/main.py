@@ -437,7 +437,7 @@ def sync_deployed_content():
                 "description_uz": "Loki ismli xavfli dushman Yerga tahdid solganda, Nik Fyuri Iron Man, Kapitan Amerika, Tor, Halk, Black Widow va Hawkeye kabi qahramonlarni bir jamoaga yig'adi. Dastlab ular bir-biri bilan chiqisha olmaydi, ammo keyinchalik birlashib, ulkan begona mavjudotlar hujumini to'xtatishga va Nyu-York shahrini saqlab qolishga harakat qilishadi. Film jangovar sahnalar, hazil va epik urushlarga boy.",
                 "poster": "https://m.media-amazon.com/images/M/MV5BNGE0YTVjNzUtNzJjOS00NGNlLTgxMzctZTY4YTE1Y2Y1ZTU4XkEyXkFqcGc@._V1_.jpg",
                 "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
-                "video_url": "Avenger.mp4",
+                "video_url": video_url_from_env("MOVIE_AVENGER_URL", "Avenger.mp4"),
                 "year": 2012,
                 "genre": ["Action"],
                 "rating": 0.0,
@@ -457,7 +457,7 @@ def sync_deployed_content():
                 "description_uz": "MeniBog'la - bu zamonaviy ijtimoiy tarmoq dasturi bo'lib, unda foydalanuvchilar o'z profilini yaratishi, bir-birini kuzatishi, postlarga layk bosishi, kommentariya yozishi, kommentariyalarga javob berishi, postlarni ulashishi va saqlab qo'yishi mumkin. Dastur muloqotni oson, tez va qiziqarli qilish uchun yaratilgan. Foydalanuvchilar do'stlari bilan bog'lanishi, yangi insonlarni topishi va o'z ijtimoiy sahifasini boshqarishi mumkin.",
                 "poster": "https://img.kinochilar.com/uploads/posts/1732659724-2098248055-dastur-kinochilar-com.jpg",
                 "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
-                "video_url": "Dastur_720.mp4",
+                "video_url": video_url_from_env("MOVIE_DASTUR_URL", "Dastur_720.mp4"),
                 "year": 2023,
                 "genre": ["Fantastic"],
                 "rating": 10.0,
@@ -477,7 +477,7 @@ def sync_deployed_content():
                 "description_uz": "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
                 "poster": "/photos/01-avengers-2012.webp",
                 "backdrop": "/photos/maxresdefault.jpg",
-                "video_url": "Avengers.mp4",
+                "video_url": video_url_from_env("MOVIE_AVENGERS_URL", "Avengers.mp4"),
                 "year": 2012,
                 "genre": ["Action", "Adventure"],
                 "rating": 8.0,
@@ -565,6 +565,10 @@ MOVIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Mov
 MOVIES_DIR_ABS = os.path.abspath(MOVIES_DIR)
 SHORTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "shorts")
 SHORTS_DIR_ABS = os.path.abspath(SHORTS_DIR)
+
+
+def video_url_from_env(env_name: str, local_filename: str) -> str:
+    return os.getenv(env_name, local_filename).strip() or local_filename
 
 
 @app.get("/media/{filename:path}")

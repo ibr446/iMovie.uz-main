@@ -119,7 +119,7 @@ const getPlayableShortUrl = (url: string) => {
   if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
   if (rawUrl.startsWith('/shorts/')) return rawUrl;
 
-  const backendOrigin = `http://${window.location.hostname}:8000`;
+  const backendOrigin = import.meta.env.PROD ? '' : `http://${window.location.hostname}:8000`;
   if (rawUrl.startsWith('/')) return `${backendOrigin}${rawUrl}`;
 
   return `${backendOrigin}/short-videos/${encodePath(rawUrl)}`;
