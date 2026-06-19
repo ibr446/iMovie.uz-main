@@ -45,14 +45,14 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
   const newlyReleased = movies.filter(m => m.isNew || m.year === 2024 || m.year === 2025);
   
   const MovieRow = ({ title, data }: { title: string, data: typeof movies }) => (
-    <section className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <div className="flex items-center justify-between mb-6 px-2">
-        <h2 className="text-3xl font-black tracking-tighter text-white">{title}</h2>
-        <button className="flex items-center text-sm font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
+    <section className="mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700 md:mb-12">
+      <div className="mb-4 flex items-center justify-between px-1 md:mb-6 md:px-2">
+        <h2 className="text-2xl font-black tracking-tight text-white md:text-3xl">{title}</h2>
+        <button className="hidden items-center text-sm font-bold uppercase tracking-widest text-zinc-500 transition-colors hover:text-white sm:flex">
           See All <ChevronRight size={16} />
         </button>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-6 lg:grid-cols-5 xl:grid-cols-6">
         {data.map(movie => (
           <MovieCard key={movie.id} movie={movie} onClick={onMovieClick} />
         ))}
@@ -68,16 +68,16 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
         onInfo={onMovieClick} 
       />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24 relative z-20 -mt-20">
+      <div className="relative z-20 mx-auto -mt-20 max-w-7xl space-y-14 px-4 py-10 sm:px-6 md:space-y-24 md:py-12 lg:px-8">
         <MovieRow title={t('trending')} data={trending} />
         <MovieRow title={t('new_releases')} data={newlyReleased} />
         
-        <section id="categories" className="scroll-mt-28 py-12 border-y border-white/5 overflow-hidden">
-          <div className="mb-8 px-2">
+        <section id="categories" className="scroll-mt-28 overflow-hidden border-y border-white/5 py-10 md:py-12">
+          <div className="mb-6 px-1 md:mb-8 md:px-2">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">{t('categories')}</p>
-            <h2 className="mt-2 text-3xl font-black tracking-tighter text-white">Pick Your Mood</h2>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-white md:text-3xl">Pick Your Mood</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
             {movieCategories.map((category) => {
               const Icon = categoryIcons[category.icon];
               const count = movies.filter(movie => movie.genre.includes(category.genre)).length;
@@ -87,21 +87,21 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
                   key={category.genre}
                   type="button"
                   onClick={() => onCategoryClick(category.genre)}
-                  className="group relative min-h-40 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/70 p-5 text-left transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-zinc-900"
+                  className="group relative min-h-36 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/70 p-4 text-left transition-all hover:-translate-y-1 hover:border-white/25 hover:bg-zinc-900 md:min-h-40 md:p-5"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${category.accent} opacity-80 transition-opacity group-hover:opacity-100`} />
                   <div className="relative z-10 flex h-full flex-col justify-between gap-8">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-white">
-                        <Icon size={22} />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-white md:h-11 md:w-11">
+                        <Icon size={20} />
                       </div>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-zinc-300">
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold text-zinc-300 md:text-xs">
                         {count} films
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black tracking-tight text-white">{category.label[lang]}</h3>
-                      <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-300">{category.description[lang]}</p>
+                      <h3 className="text-lg font-black tracking-tight text-white md:text-2xl">{category.label[lang]}</h3>
+                      <p className="mt-2 line-clamp-2 text-xs leading-5 text-zinc-300 md:text-sm">{category.description[lang]}</p>
                     </div>
                   </div>
                 </button>

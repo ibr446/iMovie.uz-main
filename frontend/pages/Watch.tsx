@@ -51,6 +51,7 @@ const qualityOptions = [
 ];
 
 const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const demoVideoUrl = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
 const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   const { lang } = useTranslation();
@@ -85,6 +86,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
 
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     if (rawUrl.startsWith('/')) return `${backendOrigin}${rawUrl}`;
+    if (import.meta.env.PROD) return demoVideoUrl;
 
     const mediaPath = rawUrl.split('/').map(encodeURIComponent).join('/');
     return `${backendOrigin}/media/${mediaPath}`;
@@ -373,7 +375,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
       <video 
         ref={videoRef}
         src={videoSrc}
-        className="w-full h-full object-contain cursor-pointer"
+        className="h-full w-full cursor-pointer object-contain"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}
@@ -425,7 +427,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/60 pointer-events-none" />
 
         {/* Top Header */}
-        <div className="absolute top-0 left-0 right-0 p-4 md:p-8 flex items-center justify-between z-20">
+        <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between p-4 pt-[calc(1rem+env(safe-area-inset-top))] md:p-8">
           <button 
             onClick={(e) => { e.stopPropagation(); onBack(); }}
             className="flex items-center gap-2 text-white hover:text-zinc-400 transition-colors"
@@ -433,7 +435,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
             <ChevronLeft size={32} />
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Streaming Now</span>
-              <span className="text-xl font-black tracking-tighter">{movie.title[lang]}</span>
+              <span className="max-w-[62vw] truncate text-lg font-black tracking-tight md:max-w-none md:text-xl">{movie.title[lang]}</span>
             </div>
           </button>
           
@@ -450,12 +452,12 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
         </div>
 
         {/* Center Play/Pause Button */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="flex items-center gap-8 md:gap-16">
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="flex items-center gap-7 md:gap-16">
             <button 
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); seekBy(-10); }}
-              className="text-white/60 hover:text-white transition-all hover:scale-110 active:scale-90"
+              className="text-white/70 transition-all hover:scale-110 hover:text-white active:scale-90"
             >
               <SkipBack size={40} />
               <span className="text-[10px] font-black block text-center mt-1">10s</span>
@@ -463,14 +465,14 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
             <button 
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); togglePlay(); }}
-              className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all shadow-[0_0_60px_rgba(59,130,246,0.3)]"
+              className="flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_0_60px_rgba(59,130,246,0.3)] backdrop-blur-2xl transition-all hover:scale-110 hover:bg-white/20 active:scale-95 md:h-24 md:w-24"
             >
               {isPlaying ? <Pause size={40} fill="white" /> : <Play size={40} fill="white" className="ml-1" />}
             </button>
             <button 
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); seekBy(10); }}
-              className="text-white/60 hover:text-white transition-all hover:scale-110 active:scale-90"
+              className="text-white/70 transition-all hover:scale-110 hover:text-white active:scale-90"
             >
               <SkipForward size={40} />
               <span className="text-[10px] font-black block text-center mt-1">10s</span>
@@ -479,7 +481,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
         </div>
 
         {/* Bottom Controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 z-20" onClick={e => e.stopPropagation()}>
+        <div className="absolute bottom-0 left-0 right-0 z-20 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-8" onClick={e => e.stopPropagation()}>
           {/* Progress Bar */}
           <div 
             onClick={handleProgressClick}
@@ -533,7 +535,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
               </div>
 
               {/* Time */}
-              <span className="text-sm font-mono tracking-tighter text-white/80">
+              <span className="text-xs font-mono tracking-tighter text-white/80 sm:text-sm">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>

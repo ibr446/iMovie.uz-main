@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Globe, ChevronDown } from 'lucide-react';
+import { ChevronDown, Languages } from 'lucide-react';
 import { useTranslation } from '../context/LanguageContext';
 import { Language } from '../../types';
 
@@ -8,38 +7,42 @@ const LanguageSwitcher: React.FC = () => {
   const { lang, setLang } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const languages: { code: Language; label: string; flag: string }[] = [
-    { code: 'en', label: 'English', flag: '🇺🇸' },
-    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-    { code: 'uz', label: 'Oʻzbekcha', flag: '🇺🇿' }
+  const languages: { code: Language; label: string }[] = [
+    { code: 'en', label: 'English' },
+    { code: 'ru', label: 'Русский' },
+    { code: 'uz', label: "O'zbekcha" },
   ];
 
   return (
     <div className="relative">
-      <button 
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm font-medium text-white"
+        className="flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2.5 py-2 text-[11px] font-black uppercase text-white transition-all hover:bg-white/15 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm sm:font-medium"
       >
-        <span>{languages.find(l => l.code === lang)?.flag}</span>
-        <span className="hidden sm:inline uppercase">{lang}</span>
-        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <Languages size={14} className="hidden min-[360px]:block" />
+        <span>{lang}</span>
+        <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-40 glass border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[100] animate-in slide-in-from-top-2 duration-200">
-          {languages.map((l) => (
+        <div className="absolute right-0 top-full z-[100] mt-2 w-40 overflow-hidden rounded-2xl border border-white/10 shadow-2xl glass animate-in slide-in-from-top-2 duration-200">
+          {languages.map((language) => (
             <button
-              key={l.code}
+              key={language.code}
+              type="button"
               onClick={() => {
-                setLang(l.code);
+                setLang(language.code);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-3 text-sm font-medium transition-all flex items-center gap-3 ${
-                lang === l.code ? 'bg-white/20 text-white' : 'text-zinc-400 hover:bg-white/10 hover:text-white'
+              className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm font-bold transition-all ${
+                lang === language.code
+                  ? 'bg-white/20 text-white'
+                  : 'text-zinc-300 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <span>{l.flag}</span>
-              {l.label}
+              <span>{language.label}</span>
+              <span className="text-[10px] uppercase text-zinc-500">{language.code}</span>
             </button>
           ))}
         </div>

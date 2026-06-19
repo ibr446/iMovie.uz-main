@@ -260,7 +260,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
   return (
     <div className="min-h-screen bg-zinc-950 text-white animate-in fade-in duration-700">
       {/* Hero Backdrop */}
-      <div className="relative h-[62vh] overflow-hidden bg-zinc-950">
+      <div className="relative h-[54vh] min-h-[430px] overflow-hidden bg-zinc-950 md:h-[62vh]">
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-zinc-950 via-zinc-950/35 to-black/20" />
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/25 to-black/40" />
         <img
@@ -283,14 +283,14 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-64 relative z-20">
-        <div className="flex flex-col lg:flex-row gap-12">
+      <div className="relative z-20 mx-auto -mt-52 max-w-7xl px-4 sm:px-6 md:-mt-64 lg:px-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
           {/* Poster */}
-          <div className="w-full lg:w-96 shrink-0">
-            <div className="rounded-3xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 aspect-[2/3]">
+          <div className="mx-auto w-44 shrink-0 sm:w-56 lg:mx-0 lg:w-96">
+            <div className="aspect-[2/3] overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/50 md:rounded-3xl">
               <img src={movie.poster} alt={movie.title[lang]} className="w-full h-full object-cover" />
             </div>
-            <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 md:mt-8 md:gap-4">
               <button 
                 onClick={async () => {
                   if (!user) { alert('Please login first'); return; }
@@ -303,7 +303,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                   setSavingMovie(false);
                 }}
                 disabled={savingMovie}
-                className={`flex flex-col items-center gap-2 p-4 rounded-2xl glass transition-all ${isSaved ? 'bg-blue-500/20 border-blue-500/30 text-blue-400' : 'hover:bg-white/10'}`}
+                className={`flex flex-col items-center gap-2 rounded-2xl p-3 transition-all glass md:p-4 ${isSaved ? 'bg-blue-500/20 border-blue-500/30 text-blue-400' : 'hover:bg-white/10'}`}
               >
                 {isSaved ? <BookmarkCheck size={20} /> : <BookmarkPlus size={20} />}
                 <span className="text-xs font-medium">{isSaved ? 'Saved' : t('my_list')}</span>
@@ -322,7 +322,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                     setTimeout(() => setShareMsg(''), 2000);
                   }
                 }}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl glass hover:bg-white/10 transition-colors relative"
+                className="relative flex flex-col items-center gap-2 rounded-2xl p-3 transition-colors glass hover:bg-white/10 md:p-4"
               >
                 <Share2 size={20} />
                 <span className="text-xs font-medium">{shareMsg || t('share')}</span>
@@ -331,9 +331,9 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
           </div>
 
           {/* Info */}
-          <div className="flex-1 space-y-8">
+          <div className="flex-1 space-y-6 text-center lg:space-y-8 lg:text-left">
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/20">
                   <Star size={16} className="fill-current" />
                   <span className="font-bold">{movie.rating}</span>
@@ -349,9 +349,9 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                 </div>
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">{movie.title[lang]}</h1>
+              <h1 className="text-4xl font-black leading-none tracking-tight md:text-7xl">{movie.title[lang]}</h1>
               
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
                 {movie.genre.map(g => (
                   <span key={g} className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-zinc-300">
                     {g}
@@ -360,12 +360,12 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
               </div>
             </div>
 
-            <p className="text-xl text-zinc-400 leading-relaxed max-w-3xl">
+            <p className="mx-auto max-w-3xl text-base leading-7 text-zinc-300 md:text-xl md:text-zinc-400 lg:mx-0">
               {movie.description[lang]}
             </p>
 
-            <div className="flex flex-wrap gap-4 pt-4">
-              <GlassButton onClick={() => onWatch(movie.id)} className="px-10 py-5 text-xl">
+            <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-4 lg:pt-4">
+              <GlassButton onClick={() => onWatch(movie.id)} className="justify-center px-7 py-4 text-base md:px-10 md:py-5 md:text-xl">
                 <Play className="fill-current" size={24} /> {t('watch_now')}
               </GlassButton>
               <GlassButton 
@@ -380,7 +380,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                   document.body.removeChild(a);
                 }} 
                 variant="secondary" 
-                className="px-10 py-5 text-xl"
+                className="justify-center px-7 py-4 text-base md:px-10 md:py-5 md:text-xl"
               >
                 <Download size={24} /> {t('download')}
               </GlassButton>

@@ -14,7 +14,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
   return (
     <div 
       onClick={() => onClick(movie.id)}
-      className="group relative cursor-pointer overflow-hidden rounded-[24px] bg-zinc-900 transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_20px_40px_rgba(0,0,0,0.7)] border border-white/5"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-zinc-900 transition-all duration-500 hover:scale-[1.05] hover:shadow-[0_20px_40px_rgba(0,0,0,0.7)] md:rounded-[24px]"
     >
       <div className="aspect-[2/3] w-full overflow-hidden">
         <img 
@@ -25,8 +25,19 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
         />
       </div>
       
+      <div className="space-y-1.5 p-3 md:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="truncate text-sm font-black leading-tight text-white">{movie.title[lang]}</h3>
+          <div className="flex shrink-0 items-center gap-1 text-xs font-black text-yellow-400">
+            <Star className="h-3.5 w-3.5 fill-current" />
+            {movie.rating}
+          </div>
+        </div>
+        <p className="truncate text-[11px] font-bold text-zinc-500">{movie.year} - {movie.genre.slice(0, 2).join(', ')}</p>
+      </div>
+
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col justify-end p-5">
+      <div className="absolute inset-0 hidden flex-col justify-end bg-gradient-to-t from-black via-black/40 to-transparent p-5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
         <div className="translate-y-4 transition-transform duration-500 group-hover:translate-y-0">
           <div className="flex items-center gap-1 mb-1">
             <Star className="w-4 h-4 text-yellow-500 fill-current" />

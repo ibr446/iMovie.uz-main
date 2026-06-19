@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Menu, X, Play, Sun, Moon, LogOut, Settings } from 'lucide-react';
+import { User, Menu, X, Play, Sun, Moon, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -35,20 +35,108 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-3' : 'py-6'}`}>
-      <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 transition-all duration-500 ${
+      <div className="mx-auto flex h-20 w-full items-center justify-between gap-2 px-3 md:hidden">
+        <button className="flex min-w-0 items-center gap-2" onClick={() => onNavigate('home')} type="button">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg">
+            <Play className="h-5 w-5 fill-current text-white" />
+          </div>
+          <span className="text-base font-black tracking-tight text-white">iMovie.uz</span>
+        </button>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDarkTheme ? 'Light mode' : 'Dark mode'}
+            className={`hidden rounded-full border p-1.5 transition-all min-[430px]:block ${
+              isDarkTheme
+                ? 'border-white/10 bg-white/10 text-yellow-300'
+                : 'border-zinc-200 bg-white/80 text-indigo-600'
+            }`}
+          >
+            {isDarkTheme ? <Sun size={19} /> : <Moon size={19} />}
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-white/10 bg-white/10 p-1.5 text-zinc-100 backdrop-blur-xl"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {isMenuOpen && (
+        <div className="mx-4 rounded-3xl border border-white/10 bg-black/80 p-3 shadow-2xl backdrop-blur-xl md:hidden">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="mb-2 flex w-full items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-left text-sm font-bold text-zinc-200"
+          >
+            <span>{isDarkTheme ? 'Light mode' : 'Dark mode'}</span>
+            {isDarkTheme ? <Sun size={20} className="text-yellow-300" /> : <Moon size={20} className="text-indigo-300" />}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  onNavigate(item.id);
+                  setIsMenuOpen(false);
+                }}
+                className={`rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all ${
+                  currentPage === item.id
+                    ? 'bg-white text-black'
+                    : 'bg-white/5 text-zinc-200 hover:bg-white/10'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigate('admin');
+                  setIsMenuOpen(false);
+                }}
+                className="col-span-2 rounded-2xl bg-yellow-500/15 px-4 py-3 text-left text-sm font-black text-yellow-400"
+              >
+                {t('admin_panel')}
+              </button>
+            )}
+            {!user && (
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigate('auth');
+                  setIsMenuOpen(false);
+                }}
+                className="col-span-2 rounded-2xl bg-white px-4 py-3 text-left text-sm font-black text-black"
+              >
+                {t('login')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className={`mx-auto hidden w-[calc(100%-1rem)] max-w-7xl px-3 transition-all duration-500 sm:px-6 md:block lg:px-8 ${
         isScrolled
           ? isDarkTheme
             ? 'bg-black/60 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl'
             : 'bg-white/80 backdrop-blur-xl rounded-full border border-zinc-200 shadow-xl'
           : 'bg-transparent'
       }`}>
-        <div className="flex items-center justify-between h-14">
-          <div className="flex items-center gap-8">
+        <div className="flex h-14 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-4 md:gap-8">
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => onNavigate('home')}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg">
-                <Play className="w-6 h-6 text-white fill-current" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg transition-transform group-hover:rotate-12">
+                <Play className="h-6 w-6 fill-current text-white" />
               </div>
-              <span className={`text-xl font-bold tracking-tighter ${isDarkTheme ? 'text-white' : 'text-zinc-950'}`}>iMovie.uz</span>
+              <span className={`text-lg font-bold tracking-tighter sm:text-xl ${isDarkTheme ? 'text-white' : 'text-zinc-950'}`}>iMovie.uz</span>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
@@ -77,14 +165,16 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <LanguageSwitcher />
+          <div className="flex shrink-0 items-center gap-2 md:gap-4">
+            <div className="block">
+              <LanguageSwitcher />
+            </div>
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={isDarkTheme ? 'Light mode' : 'Dark mode'}
               title={isDarkTheme ? 'Light mode' : 'Dark mode'}
-              className={`p-2 rounded-full border transition-all ${
+              className={`rounded-full border p-2 transition-all ${
                 isDarkTheme
                   ? 'text-yellow-300 bg-white/10 border-white/10 hover:bg-yellow-300/20 hover:text-yellow-200'
                   : 'text-indigo-600 bg-zinc-900/5 border-zinc-200 hover:bg-indigo-600/10 hover:text-indigo-700'
@@ -120,16 +210,63 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
                 )}
               </div>
             ) : (
-              <button onClick={() => onNavigate('auth')} className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:bg-zinc-200 transition-all">
+              <button onClick={() => onNavigate('auth')} className="hidden rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition-all hover:bg-zinc-200 sm:block md:px-6">
                 {t('login')}
               </button>
             )}
             
-            <button className="md:hidden p-2 text-zinc-400 hover:text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            <button className="rounded-full border border-white/10 bg-white/10 p-2 text-zinc-200 backdrop-blur-xl hover:text-white md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
+
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-white/10 pb-3 pt-2 animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-2 gap-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all ${
+                    currentPage === item.id
+                      ? 'bg-white text-black'
+                      : isDarkTheme
+                        ? 'bg-white/5 text-zinc-300 hover:bg-white/10'
+                        : 'bg-zinc-900/5 text-zinc-700 hover:bg-zinc-900/10'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    onNavigate('admin');
+                    setIsMenuOpen(false);
+                  }}
+                  className="col-span-2 rounded-2xl bg-yellow-500/15 px-4 py-3 text-left text-sm font-black text-yellow-400"
+                >
+                  {t('admin_panel')}
+                </button>
+              )}
+              {!user && (
+                <button
+                  onClick={() => {
+                    onNavigate('auth');
+                    setIsMenuOpen(false);
+                  }}
+                  className="col-span-2 rounded-2xl bg-white px-4 py-3 text-left text-sm font-black text-black"
+                >
+                  {t('login')}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
