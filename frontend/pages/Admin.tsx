@@ -33,7 +33,7 @@ const AdminPanel: React.FC = () => {
     views: 0,
     poster: '',
     backdrop: '',
-    videoUrl: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    videoUrl: 'Avengers.mp4',
     duration: '1h 30m',
     country: 'USA'
   });
@@ -315,6 +315,7 @@ const AdminPanel: React.FC = () => {
                 <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Video URL (Direct link)</label>
                 <input 
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Avengers.mp4 yoki https://example.com/movie.mp4"
                   value={newMovie.videoUrl}
                   onChange={e => setNewMovie({ ...newMovie, videoUrl: e.target.value })}
                 />

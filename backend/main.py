@@ -26,6 +26,7 @@ from routers.shorts_router import router as shorts_router
 CHUNK_SIZE = 1024 * 1024
 DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist"))
 DIST_ASSETS_DIR = os.path.join(DIST_DIR, "assets")
+VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".mkv", ".avi"}
 
 
 def iter_file_range(file_path: str, start: int, end: int):
@@ -127,12 +128,52 @@ def stream_file_response(file_path: str, request: Request):
 
 
 
+def discover_local_movies() -> list[dict[str, str]]:
+    """Discover local movie files in the Movies directory and return metadata.
+
+    This is a fallback for deployment when static movie catalog files are present.
+    """
+    if not os.path.exists(MOVIES_DIR_ABS):
+        return []
+
+    local_movies = []
+    for root, _, files in os.walk(MOVIES_DIR_ABS):
+        for filename in files:
+            _, ext = os.path.splitext(filename)
+            if ext.lower() not in VIDEO_EXTENSIONS:
+                continue
+
+            relative_path = os.path.relpath(os.path.join(root, filename), MOVIES_DIR_ABS)
+            movie_id = os.path.splitext(relative_path.replace(os.sep, "-"))[0]
+            local_movies.append({
+                "id": movie_id,
+                "title_en": os.path.splitext(filename)[0],
+                "title_ru": os.path.splitext(filename)[0],
+                "title_uz": os.path.splitext(filename)[0],
+                "description_en": "Local movie from Movies folder.",
+                "description_ru": "Фильм из папки Movies.",
+                "description_uz": "Movies papkasidagi mahalliy film.",
+                "poster": "/photos/maxresdefault.jpg",
+                "backdrop": "/photos/maxresdefault.jpg",
+                "video_url": f"/media/{relative_path.replace('\\', '/')}",
+                "year": 2024,
+                "genre": ["Drama"],
+                "rating": 7.0,
+                "duration": "Unknown",
+                "country": "Local",
+                "is_trending": False,
+                "is_new": True,
+                "views": 0,
+            })
+    return local_movies
+
+
 def seed_database():
     """Seed the database with initial data if empty."""
     db = SessionLocal()
     try:
-        # Check if data already exists
-        if db.query(User).count() > 0:
+        # If any movies already exist, assume this database is seeded.
+        if db.query(Movie).count() > 0:
             return
 
         print("🌱 Seeding database...")
@@ -326,8 +367,15 @@ def seed_database():
         for movie in movies_data:
             db.add(movie)
 
+        # Try to detect local movie files and seed them as well
+        local_movie_entries = discover_local_movies()
+        for local_data in local_movie_entries:
+            if db.query(Movie).filter(Movie.id == local_data["id"]).first():
+                continue
+            db.add(Movie(**local_data))
+
         db.commit()
-        print(f"✅ Seeded {len(movies_data)} movies, admin + demo user created")
+        print(f"✅ Seeded {len(movies_data) + len(local_movie_entries)} movies, admin + demo user created")
         print("   Admin: admin@imovie.uz / admin123")
         print("   Demo:  user@imovie.uz / user123")
 

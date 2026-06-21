@@ -43,6 +43,7 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
   const featuredMovies = movies.slice(0, 3);
   const trending = movies.filter(m => m.isTrending || m.rating >= 8);
   const newlyReleased = movies.filter(m => m.isNew || m.year === 2024 || m.year === 2025);
+  const allMoviesTitle = lang === 'uz' ? 'Barcha filmlar' : lang === 'ru' ? 'Все фильмы' : 'All Movies';
   
   const MovieRow = ({ title, data }: { title: string, data: typeof movies }) => (
     <section className="mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700 md:mb-12">
@@ -71,6 +72,7 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
       <div className="relative z-20 mx-auto -mt-20 max-w-7xl space-y-14 px-4 py-10 sm:px-6 md:space-y-24 md:py-12 lg:px-8">
         <MovieRow title={t('trending')} data={trending} />
         <MovieRow title={t('new_releases')} data={newlyReleased} />
+        <MovieRow title={allMoviesTitle} data={movies} />
         
         <section id="categories" className="scroll-mt-28 overflow-hidden border-y border-white/5 py-10 md:py-12">
           <div className="mb-6 px-1 md:mb-8 md:px-2">
