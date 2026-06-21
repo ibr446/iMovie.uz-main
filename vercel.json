@@ -1,6 +1,35 @@
 {
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
+  "builds": [
+    {
+      "src": "pyproject.toml",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/main.py"
+    },
+    {
+      "src": "/media/(.*)",
+      "dest": "/backend/main.py"
+    },
+    {
+      "src": "/short-videos/(.*)",
+      "dest": "/backend/main.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
