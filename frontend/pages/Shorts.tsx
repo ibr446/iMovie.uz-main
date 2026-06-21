@@ -137,6 +137,7 @@ const Shorts: React.FC = () => {
   const [shareMessage, setShareMessage] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const wheelLockRef = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const activeShort = shorts[activeIdx] || shorts[0] || fallbackShorts[0];
   const activeShortVideoUrl = useMemo(
@@ -354,10 +355,34 @@ const Shorts: React.FC = () => {
     }, 650);
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (showComments) return;
+
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (showComments || !touchStartRef.current) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    touchStartRef.current = null;
+
+    if (Math.abs(deltaY) < 55 || Math.abs(deltaY) < Math.abs(deltaX)) return;
+
+    if (deltaY < 0) goToNext();
+    else goToPrevious();
+  };
+
   return (
     <div
       className="fixed inset-0 z-30 overflow-hidden bg-black pt-20 text-white md:pt-24"
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* <div className="pointer-events-none absolute inset-x-0 top-24 z-40 px-8 md:top-28 shorts">
         <div className="mx-auto flex max-w-[340px] items-center justify-between rounded-full bg-black/30 px-3 py-1.5 opacity-80 backdrop-blur-md">
