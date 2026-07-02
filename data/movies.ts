@@ -1,30 +1,30 @@
 import { Movie } from '../types';
 
 export const movies: Movie[] = [
-  {
-    id: 'avengers-local-2',
-    title: {
-      en: 'Avengers',
-      ru: 'Мстители',
-      uz: 'Qasoskorlar',
-    },
-    description: {
-      en: "Earth's mightiest heroes assemble to stop a dangerous enemy and protect the world from an alien invasion.",
-      ru: 'Величайшие герои Земли объединяются, чтобы остановить опасного врага и защитить мир от вторжения пришельцев.',
-      uz: "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
-    },
-    poster: '/photos/01-avengers-2012.webp',
-    backdrop: '/photos/maxresdefault.jpg',
-    videoUrl: 'Avengers.mp4',
-    year: 2012,
-    genre: ['Action', 'Adventure'],
-    rating: 8,
-    duration: '2h 23m',
-    country: 'USA',
-    isTrending: true,
-    isNew: false,
-    views: 0,
-  },
+  // {
+  //   id: 'avengers-local-2',
+  //   title: {
+  //     en: 'Avengers',
+  //     ru: 'Мстители',
+  //     uz: 'Qasoskorlar',
+  //   },
+  //   description: {
+  //     en: "Earth's mightiest heroes assemble to stop a dangerous enemy and protect the world from an alien invasion.",
+  //     ru: 'Величайшие герои Земли объединяются, чтобы остановить опасного врага и защитить мир от вторжения пришельцев.',
+  //     uz: "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
+  //   },
+  //   poster: '/photos/01-avengers-2012.webp',
+  //   backdrop: '/photos/maxresdefault.jpg',
+  //   videoUrl: 'Avengers.mp4',
+  //   year: 2012,
+  //   genre: ['Action', 'Adventure'],
+  //   rating: 8,
+  //   duration: '2h 23m',
+  //   country: 'USA',
+  //   isTrending: true,
+  //   isNew: false,
+  //   views: 0,
+  // },
   {
     id: '282b83943421',
     title: {
