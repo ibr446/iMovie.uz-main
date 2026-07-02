@@ -515,13 +515,14 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
 
 
           <div className={styles.choose__lan}>
-            <div className={styles.choose}>
+            <label className={styles.choose} aria-label="Audio language">
+              <Volume2 className={styles.choose__icon} size={16} />
               <select name="language" id="language" className={styles.choose__type}>
-                <option value="english" className={styles.option}>Eng Orginal</option>
-                <option value="russian" className={styles.option}>Рус Дублированный</option>
-                <option value="uzbek" className={styles.option}>Uz Дублированный</option>
+                <option value="english" className={styles.option}>Eng Original</option>
+                <option value="russian" className={styles.option}>Rus Dublyaj</option>
+                <option value="uzbek" className={styles.option}>Uz Dublyaj</option>
               </select>
-            </div>
+            </label>
           </div>
 
 

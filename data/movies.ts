@@ -39,7 +39,7 @@ export const movies: Movie[] = [
     },
     poster: 'https://img.kinochilar.com/uploads/posts/1732659724-2098248055-dastur-kinochilar-com.jpg',
     backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
-    videoUrl: 'Dastur_720.mp4',
+    videoUrl: 'https://Movie-uz.b-cdn.net/Dastur_720.mp4',
     year: 2023,
     genre: ['Fantastic'],
     rating: 10,
