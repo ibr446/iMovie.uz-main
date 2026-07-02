@@ -57,7 +57,7 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const openAddModal = () => {
+  const openAddModal = () => { 
     setEditingMovieId(null);
     setNewMovie(createEmptyMovieForm());
     setShowAddModal(true);

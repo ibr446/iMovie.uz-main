@@ -1,3 +1,4 @@
+import os
 import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,6 +12,89 @@ from auth import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/movies", tags=["Movies"])
 
+MOVIES_DIR_ABS = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Movies"))
+
+
+def _normalize_local_media_path(video_url: str) -> Optional[str]:
+    raw_url = video_url.strip()
+    if raw_url.startswith("http://") or raw_url.startswith("https://"):
+        return None
+    if raw_url.startswith("/media/"):
+        return raw_url[len("/media/"):]
+    if raw_url.startswith("/"):
+        return raw_url[1:]
+    return raw_url
+
+
+def _slugify_name(name: str) -> str:
+    return ''.join(ch for ch in name.lower() if ch.isalnum())
+
+
+def _match_video_to_subtitle(video_base: str, subtitle_name: str) -> bool:
+    video_slug = _slugify_name(video_base)
+    subtitle_slug = _slugify_name(subtitle_name)
+    if not video_slug or not subtitle_slug:
+        return False
+    if video_slug == subtitle_slug:
+        return True
+    if video_slug in subtitle_slug or subtitle_slug in video_slug:
+        return True
+    if video_slug.endswith('s') and video_slug[:-1] == subtitle_slug:
+        return True
+    if subtitle_slug.endswith('s') and subtitle_slug[:-1] == video_slug:
+        return True
+    return False
+
+
+def _lang_from_srt_filename(filename: str) -> Optional[str]:
+    normalized = filename.lower()
+    if "english" in normalized or ".en." in normalized or normalized.endswith(".en.srt") or "_en" in normalized or "-en" in normalized:
+        return "en"
+    if "russian" in normalized or "рус" in normalized or ".ru." in normalized or normalized.endswith(".ru.srt") or "_ru" in normalized or "-ru" in normalized:
+        return "ru"
+    if "uzbek" in normalized or "o'zbek" in normalized or ".uz." in normalized or normalized.endswith(".uz.srt") or "_uz" in normalized or "-uz" in normalized:
+        return "uz"
+    return None
+
+
+def _detect_subtitle_urls(video_url: str) -> dict[str, str]:
+    video_path = _normalize_local_media_path(video_url)
+    if not video_path:
+        return {}
+
+    video_dir = os.path.dirname(video_path)
+    video_base = os.path.splitext(os.path.basename(video_path))[0]
+    search_dir = os.path.join(MOVIES_DIR_ABS, video_dir) if video_dir else MOVIES_DIR_ABS
+    if not os.path.isdir(search_dir):
+        return {}
+
+    matched: dict[str, str] = {}
+    unmatched_generic: dict[str, str] = {}
+
+    for entry in os.listdir(search_dir):
+        if not entry.lower().endswith(".srt"):
+            continue
+        lang = _lang_from_srt_filename(entry)
+        if not lang:
+            continue
+
+        entry_base = os.path.splitext(entry)[0]
+        path_relative = os.path.join(video_dir, entry) if video_dir else entry
+        subtitle_url = f"/media/{path_relative.replace(chr(92), '/')}"
+
+        if _match_video_to_subtitle(video_base, entry_base):
+            matched[lang] = subtitle_url
+        else:
+            unmatched_generic.setdefault(lang, subtitle_url)
+
+    if not matched:
+        return unmatched_generic
+
+    for lang, url in unmatched_generic.items():
+        matched.setdefault(lang, url)
+
+    return matched
+
 
 def _movie_to_response(movie: Movie) -> MovieResponse:
     """Convert a Movie ORM object to MovieResponse schema."""
@@ -21,6 +105,7 @@ def _movie_to_response(movie: Movie) -> MovieResponse:
         poster=movie.poster,
         backdrop=movie.backdrop,
         videoUrl=movie.video_url,
+        subtitleUrls=_detect_subtitle_urls(movie.video_url),
         year=movie.year,
         genre=movie.genre or [],
         rating=movie.rating,

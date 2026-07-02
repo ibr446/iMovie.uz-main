@@ -4,6 +4,7 @@ import { ChevronLeft, Play, Pause, Volume2, Settings, Maximize2, Minimize2, Skip
 import { Movie } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
 import { apiPost } from '../../api';
+import styles from "./Watch.module.css";
 
 interface WatchProps {
   movie: Movie;
@@ -20,26 +21,26 @@ function generateSubs(lines: string[], cycleSec = 4): Array<{ start: number; end
   return result;
 }
 
-const mockSubtitles: Record<string, Array<{ start: number; end: number; text: string }>> = {
-  en: generateSubs([
-    "Welcome to iMovie.uz", "Enjoy the show!", "The adventure begins now...",
-    "An exciting journey unfolds", "Stay tuned for more!", "Premium streaming experience",
-    "Thank you for watching", "The story continues...", "Action and drama ahead",
-    "A world of cinema awaits",
-  ]),
-  ru: generateSubs([
-    "Добро пожаловать на iMovie.uz", "Приятного просмотра!", "Приключение начинается...",
-    "Увлекательное путешествие", "Оставайтесь с нами!", "Премиум качество",
-    "Спасибо за просмотр", "История продолжается...", "Экшн и драма впереди",
-    "Мир кино ждёт вас",
-  ]),
-  uz: generateSubs([
-    "iMovie.uz ga xush kelibsiz", "Yoqimli tomosha!", "Sarguzasht boshlanadi...",
-    "Qiziqarli sayohat davom etadi", "Bizda qoling!", "Premium sifat",
-    "Tomosha qilganingiz uchun rahmat", "Hikoya davom etadi...", "Harakat va drama oldinda",
-    "Kino olami sizni kutmoqda",
-  ]),
-};
+// const mockSubtitles: Record<string, Array<{ start: number; end: number; text: string }>> = {
+//   en: generateSubs([
+//     "Welcome to iMovie.uz", "Enjoy the show!", "The adventure begins now...",
+//     "An exciting journey unfolds", "Stay tuned for more!", "Premium streaming experience",
+//     "Thank you for watching", "The story continues...", "Action and drama ahead",
+//     "A world of cinema awaits",
+//   ]),
+//   ru: generateSubs([
+//     "Добро пожаловать на iMovie.uz", "Приятного просмотра!", "Приключение начинается...",
+//     "Увлекательное путешествие", "Оставайтесь с нами!", "Премиум качество",
+//     "Спасибо за просмотр", "История продолжается...", "Экшн и драма впереди",
+//     "Мир кино ждёт вас",
+//   ]),
+//   uz: generateSubs([
+//     "iMovie.uz ga xush kelibsiz", "Yoqimli tomosha!", "Sarguzasht boshlanadi...",
+//     "Qiziqarli sayohat davom etadi", "Bizda qoling!", "Premium sifat",
+//     "Tomosha qilganingiz uchun rahmat", "Hikoya davom etadi...", "Harakat va drama oldinda",
+//     "Kino olami sizni kutmoqda",
+//   ]),
+// };
 
 const qualityOptions = [
   { label: '4K Ultra HD', value: '2160p', badge: '4K' },
@@ -54,6 +55,7 @@ const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const demoVideoUrl = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
 const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
+  console.log('[Watch] Mounted, movie.id:', movie.id, 'subtitleUrls:', movie.subtitleUrls);
   const { lang } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -63,15 +65,16 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Settings
+   // Settings
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'main' | 'quality' | 'speed' | 'subtitle'>('main');
   const [selectedQuality, setSelectedQuality] = useState('auto');
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   
-  // Subtitles
+   // Subtitles
   const [subtitleLang, setSubtitleLang] = useState<string | null>(null);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
+  const [availableSubLangs, setAvailableSubLangs] = useState<string[]>([]);
   
   // Buffering
   const [buffered, setBuffered] = useState(0);
@@ -129,15 +132,85 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   }, [isPlaying, resetControlsTimer]);
 
   // Update subtitle text based on current time
+  // Load real subtitles from movie.subtitleUrls when available, otherwise fallback to mock subs
+  const [remoteSubs, setRemoteSubs] = useState<Record<string, Array<{ start: number; end: number; text: string }>>|null>(null);
+
   useEffect(() => {
-    if (!subtitleLang || !mockSubtitles[subtitleLang]) {
-      setCurrentSubtitle('');
-      return;
+    let mounted = true;
+    async function loadSrt(url: string) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) { console.warn('[Subtitle] Bad response for', url, res.status); return null; }
+        const text = await res.text();
+      // very small srt parser
+        const items = text.split(/\r?\n\r?\n/).map(block => block.trim()).filter(Boolean);
+        const parsed = items.map(block => {
+          const parts = block.split(/\r?\n/);
+          if (parts.length < 3) return null;
+          const time = parts[1] || '';
+          if (!time.includes('-->')) return null;
+          const [startRaw, endRaw] = time.split('-->').map(s => s.trim());
+          const toSeconds = (t: string) => {
+            const m = t.split(/[:,.]/).map(Number);
+            if (m.length >= 4) return m[0]*3600 + m[1]*60 + m[2] + (m[3]/1000);
+            if (m.length === 3) return m[0]*60 + m[1] + (m[2]/1000);
+            return 0;
+          };
+          const start = toSeconds(startRaw);
+          const end = toSeconds(endRaw);
+          if (!isFinite(start) || !isFinite(end) || end <= start) return null;
+          const textLines = parts.slice(2).join('\n').trim();
+          if (!textLines) return null;
+          return { start, end, text: textLines };
+        }).filter((s): s is { start: number; end: number; text: string } => s !== null);
+        return parsed;
+      } catch (err) {
+        console.warn('[Subtitle] Error loading SRT:', err);
+        return null;
+      }
     }
-    const subs = mockSubtitles[subtitleLang];
-    const activeSub = subs.find(s => currentTime >= s.start && currentTime < s.end);
-    setCurrentSubtitle(activeSub ? activeSub.text : '');
-  }, [currentTime, subtitleLang]);
+
+    (async () => {
+      console.log('[Subtitle] movie.subtitleUrls:', movie.subtitleUrls, 'movie.id:', movie.id);
+      if (!movie.subtitleUrls) { console.log('[Subtitle] No subtitleUrls, skipping'); if (mounted) setRemoteSubs(null); return; }
+      const entries: Record<string, Array<{ start: number; end: number; text: string }>> = {};
+      for (const lang of Object.keys(movie.subtitleUrls) as Array<string>) {
+        const url = (movie.subtitleUrls as any)[lang];
+        if (!url) { console.log('[Subtitle] No URL for', lang); continue; }
+        const resolved = url.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`;
+        console.log('[Subtitle] Fetching', lang, 'from', resolved);
+        const parsed = await loadSrt(resolved);
+        console.log('[Subtitle] Parsed', lang, 'entries:', parsed ? parsed.length : 0);
+        if (parsed) entries[lang] = parsed;
+      }
+      console.log('[Subtitle] Final entries loaded:', Object.keys(entries).length > 0 ? Object.keys(entries) : 'none');
+      const loadedLangs = Object.keys(entries);
+      if (mounted) {
+        setRemoteSubs(Object.keys(entries).length ? entries : null);
+        setAvailableSubLangs(loadedLangs);
+        if (loadedLangs.length > 0 && !subtitleLang) {
+          const preferred = loadedLangs.find(l => l === lang) || loadedLangs[0];
+          console.log('[Subtitle] Auto-enabling subtitle for language:', preferred);
+          setSubtitleLang(preferred);
+        }
+      }
+    })().catch(err => console.warn('[Subtitle] Outer error:', err));
+
+    return () => { mounted = false; };
+  }, [movie.id]);
+
+  useEffect(() => {
+    if (subtitleLang) {
+      const subs = (remoteSubs && remoteSubs[subtitleLang]);
+      console.log('[Subtitle Render] lang:', subtitleLang, 'subs found:', !!subs, 'currentTime:', currentTime);
+      if (!subs) { setCurrentSubtitle(''); return; }
+      const active = subs.find(s => currentTime >= s.start && currentTime < s.end);
+      console.log('[Subtitle Render] active entry:', active);
+      setCurrentSubtitle(active ? active.text : '');
+    } else {
+      setCurrentSubtitle('');
+    }
+  }, [currentTime, subtitleLang, remoteSubs]);
 
   const seekTo = useCallback((targetTime: number) => {
     const video = videoRef.current;
@@ -410,16 +483,16 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
         </div>
       )}
 
-      {/* Subtitle Display */}
-      {currentSubtitle && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/10">
-            <p className="text-white text-lg md:text-2xl font-medium text-center leading-relaxed drop-shadow-lg">
-              {currentSubtitle}
-            </p>
-          </div>
-        </div>
-      )}
+{/* Subtitle Display */}
+       {currentSubtitle && (
+         <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+           <div className="bg-black/80 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/10">
+             <p className="text-white text-lg md:text-2xl font-medium text-center leading-relaxed drop-shadow-lg font-sans" style={{fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'}}>
+               {currentSubtitle}
+             </p>
+           </div>
+         </div>
+       )}
 
       {/* Overlay UI */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -438,8 +511,22 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
               <span className="max-w-[62vw] truncate text-lg font-black tracking-tight md:max-w-none md:text-xl">{movie.title[lang]}</span>
             </div>
           </button>
+
+
+
+          <div className={styles.choose__lan}>
+            <div className={styles.choose}>
+              <select name="language" id="language" className={styles.choose__type}>
+                <option value="english" className={styles.option}>Eng Orginal</option>
+                <option value="russian" className={styles.option}>Рус Дублированный</option>
+                <option value="uzbek" className={styles.option}>Uz Дублированный</option>
+              </select>
+            </div>
+          </div>
+
+
           
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <span className="text-[10px] font-black bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-lg">
               {getQualityLabel()}
             </span>
@@ -448,7 +535,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
                 CC: {subtitleLang.toUpperCase()}
               </span>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Center Play/Pause Button */}

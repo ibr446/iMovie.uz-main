@@ -25,7 +25,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(true);
       const data = await apiGet<Movie[]>('/movies');
       if (data.length > 0) {
-        setMovies(data);
+        setMovies(data as Movie[]);
       } else {
         setMovies(fallbackMovies);
       }

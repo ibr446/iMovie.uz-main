@@ -5,6 +5,7 @@ export interface Movie {
   poster: string;
   backdrop: string;
   videoUrl: string;
+  subtitleUrls?: SubtitleUrls;
   year: number;
   genre: string[];
   rating: number;
@@ -18,12 +19,19 @@ export interface Movie {
 
 export type Language = 'en' | 'ru' | 'uz';
 
+export interface SubtitleUrls {
+  en?: string;
+  ru?: string;
+  uz?: string;
+}
+
 export interface Comment {
   id: string;
   movieId: string;
   userId: string;
   userName: string;
   userAvatar: string;
+  subtitleUrls?: SubtitleUrls;
   text: string;
   date: string;
   rating: number;

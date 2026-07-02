@@ -1,0 +1,12 @@
+
+.choose__type {
+    background-color: black;
+    height: 35px;
+    width: 200px;
+    border-radius: 10px;
+    font-family: "Georgia", serif;
+}
+
+.option {
+    color: white;
+}

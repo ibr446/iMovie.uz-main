@@ -63,6 +63,12 @@ class MovieDescription(BaseModel):
     uz: str = ""
 
 
+class SubtitleUrls(BaseModel):
+    en: Optional[str] = None
+    ru: Optional[str] = None
+    uz: Optional[str] = None
+
+
 class MovieCreate(BaseModel):
     title: MovieTitle
     description: MovieDescription
@@ -84,6 +90,7 @@ class MovieUpdate(BaseModel):
     poster: Optional[str] = None
     backdrop: Optional[str] = None
     videoUrl: Optional[str] = None
+    subtitleUrls: Optional[SubtitleUrls] = None
     year: Optional[int] = None
     genre: Optional[list[str]] = None
     rating: Optional[float] = None
@@ -100,6 +107,7 @@ class MovieResponse(BaseModel):
     poster: str
     backdrop: str
     videoUrl: str
+    subtitleUrls: SubtitleUrls = SubtitleUrls()
     year: int
     genre: list[str]
     rating: float

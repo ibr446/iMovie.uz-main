@@ -308,6 +308,17 @@ const Shorts: React.FC = () => {
       });
   };
 
+  const openComments = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowComments(true);
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.play().then(() => setIsPlaying(true)).catch(() => {});
+  };
+
   const handleShare = async () => {
     const text = `${activeShort.author}: ${activeShort.caption}`;
     apiPost<ShortItem>(`/shorts/${activeShort.id}/share`).then(replaceShort).catch(() => {});
@@ -508,7 +519,7 @@ const Shorts: React.FC = () => {
             <div className="flex flex-col items-center gap-1">
               <button
                 type="button"
-                onClick={() => setShowComments(true)}
+                onClick={openComments}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-md transition hover:text-blue-300 active:scale-90"
               >
                 <MessageCircle size={27} />

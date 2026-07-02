@@ -63,7 +63,7 @@ export const movies: Movie[] = [
     },
     poster: 'https://m.media-amazon.com/images/M/MV5BNGE0YTVjNzUtNzJjOS00NGNlLTgxMzctZTY4YTE1Y2Y1ZTU4XkEyXkFqcGc@._V1_.jpg',
     backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
-    videoUrl: 'Avenger.mp4',
+    videoUrl: 'https://Movie-uz.b-cdn.net/Avenger.mp4',
     year: 2012,
     genre: ['Action'],
     rating: 0,
