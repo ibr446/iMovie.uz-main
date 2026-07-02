@@ -485,7 +485,11 @@ def sync_deployed_content():
                 "description_uz": "Loki ismli xavfli dushman Yerga tahdid solganda, Nik Fyuri Iron Man, Kapitan Amerika, Tor, Halk, Black Widow va Hawkeye kabi qahramonlarni bir jamoaga yig'adi. Dastlab ular bir-biri bilan chiqisha olmaydi, ammo keyinchalik birlashib, ulkan begona mavjudotlar hujumini to'xtatishga va Nyu-York shahrini saqlab qolishga harakat qilishadi. Film jangovar sahnalar, hazil va epik urushlarga boy.",
                 "poster": "https://m.media-amazon.com/images/M/MV5BNGE0YTVjNzUtNzJjOS00NGNlLTgxMzctZTY4YTE1Y2Y1ZTU4XkEyXkFqcGc@._V1_.jpg",
                 "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
-                "video_url": video_url_from_env("MOVIE_AVENGER_URL", "Avenger.mp4"),
+                "video_url": video_url_from_env(
+                    "MOVIE_AVENGER_URL",
+                    "Avenger.mp4",
+                    "https://Movie-uz.b-cdn.net/Avenger.mp4",
+                ),
                 "year": 2012,
                 "genre": ["Action"],
                 "rating": 0.0,
@@ -505,7 +509,11 @@ def sync_deployed_content():
                 "description_uz": "MeniBog'la - bu zamonaviy ijtimoiy tarmoq dasturi bo'lib, unda foydalanuvchilar o'z profilini yaratishi, bir-birini kuzatishi, postlarga layk bosishi, kommentariya yozishi, kommentariyalarga javob berishi, postlarni ulashishi va saqlab qo'yishi mumkin. Dastur muloqotni oson, tez va qiziqarli qilish uchun yaratilgan. Foydalanuvchilar do'stlari bilan bog'lanishi, yangi insonlarni topishi va o'z ijtimoiy sahifasini boshqarishi mumkin.",
                 "poster": "https://img.kinochilar.com/uploads/posts/1732659724-2098248055-dastur-kinochilar-com.jpg",
                 "backdrop": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80",
-                "video_url": video_url_from_env("MOVIE_DASTUR_URL", "Dastur_720.mp4"),
+                "video_url": video_url_from_env(
+                    "MOVIE_DASTUR_URL",
+                    "Dastur_720.mp4",
+                    "https://Movie-uz.b-cdn.net/Dastur_720.mp4",
+                ),
                 "year": 2023,
                 "genre": ["Fantastic"],
                 "rating": 10.0,
@@ -525,7 +533,11 @@ def sync_deployed_content():
                 "description_uz": "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
                 "poster": "/photos/01-avengers-2012.webp",
                 "backdrop": "/photos/maxresdefault.jpg",
-                "video_url": video_url_from_env("MOVIE_AVENGERS_URL", "Avengers.mp4"),
+                "video_url": video_url_from_env(
+                    "MOVIE_AVENGERS_URL",
+                    "Avengers.mp4",
+                    "https://Movie-uz.b-cdn.net/Avengers.mp4",
+                ),
                 "year": 2012,
                 "genre": ["Action", "Adventure"],
                 "rating": 8.0,
@@ -542,10 +554,11 @@ def sync_deployed_content():
             if not movie:
                 movie = Movie(id=data["id"])
                 db.add(movie)
-
-            for field, value in data.items():
-                if field != "id":
-                    setattr(movie, field, value)
+                for field, value in data.items():
+                    if field != "id":
+                        setattr(movie, field, value)
+            elif should_refresh_seed_video_url(movie.video_url):
+                movie.video_url = data["video_url"]
 
         db.commit()
         print(f"Synced {len(movies_data)} deployed movies")
@@ -616,13 +629,27 @@ SHORTS_DIR_ABS = os.path.abspath(SHORTS_DIR)
 DEMO_VIDEO_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 
 
-def video_url_from_env(env_name: str, local_filename: str) -> str:
+def video_url_from_env(env_name: str, local_filename: str, hosted_default: str | None = None) -> str:
     hosted_url = os.getenv(env_name, "").strip()
     if hosted_url:
         return hosted_url
-    if os.getenv("VERCEL"):
-        return DEMO_VIDEO_URL
+    if os.getenv("VERCEL") and hosted_default:
+        return hosted_default
     return local_filename
+
+
+def should_refresh_seed_video_url(video_url: str | None) -> bool:
+    raw_url = (video_url or "").strip()
+    return raw_url in {
+        "",
+        DEMO_VIDEO_URL,
+        "Avenger.mp4",
+        "Avengers.mp4",
+        "Dastur_720.mp4",
+        "/media/Avenger.mp4",
+        "/media/Avengers.mp4",
+        "/media/Dastur_720.mp4",
+    }
 
 
 @app.get("/media/{filename:path}")
