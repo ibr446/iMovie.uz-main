@@ -12,7 +12,7 @@ import { getLocalMovieBackdrop, getMovieHeroImage, getMovieMobileHeroImage, isGe
 
 interface MovieDetailsProps {
   movie: Movie;
-  onWatch: (id: string) => void;
+  onWatch: (id: string, episodeNumber?: number) => void;
   onNavigate: (page: string) => void;
 }
 
@@ -45,6 +45,9 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
   const mobileHeroImage = getMovieMobileHeroImage(movie);
   const isLocalHero = heroImage === getLocalMovieBackdrop(movie);
   const isPosterHero = !isLocalHero && (heroImage === movie.poster || isGenericMovieImage(movie.backdrop));
+  const episodes = (movie.contentType === 'series' && movie.episodes?.length)
+    ? [...movie.episodes].sort((a, b) => a.number - b.number)
+    : [];
 
   // Check if movie is saved
   useEffect(() => {
@@ -351,6 +354,11 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                 <div className="flex items-center gap-1 text-zinc-400 text-sm">
                   <Globe size={14} /> <span>{movie.country}</span>
                 </div>
+                {(movie.contentType || 'movie') === 'series' && (
+                  <div className="flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-sm font-bold text-blue-300 border border-blue-500/20">
+                    <Play size={14} className="fill-current" /> <span>{movie.episodes?.length || 0} seriya</span>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-4xl font-black leading-none tracking-tight md:text-7xl">{movie.title[lang]}</h1>
@@ -369,7 +377,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
             </p>
 
             <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:gap-4 lg:pt-4">
-              <GlassButton onClick={() => onWatch(movie.id)} className="justify-center px-7 py-4 text-base md:px-10 md:py-5 md:text-xl">
+              <GlassButton onClick={() => onWatch(movie.id, episodes[0]?.number)} className="justify-center px-7 py-4 text-base md:px-10 md:py-5 md:text-xl">
                 <Play className="fill-current" size={24} /> {t('watch_now')}
               </GlassButton>
               <GlassButton 
@@ -389,6 +397,34 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onWatch, onNavigate 
                 <Download size={24} /> {t('download')}
               </GlassButton>
             </div>
+
+            {episodes.length > 0 && (
+              <section className="space-y-4 border-t border-white/5 pt-8">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-2xl font-black tracking-tight text-white">Seriyalar</h2>
+                  <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-blue-300">
+                    {episodes.length} seriya
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                  {episodes.map((episode) => (
+                    <button
+                      key={episode.number}
+                      type="button"
+                      onClick={() => onWatch(movie.id, episode.number)}
+                      className="group flex min-h-20 flex-col items-start justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-blue-400/50 hover:bg-blue-500/10"
+                    >
+                      <span className="text-xs font-black uppercase tracking-widest text-zinc-500 group-hover:text-blue-300">
+                        {episode.number}-seriya
+                      </span>
+                      <span className="line-clamp-2 text-sm font-bold text-white">
+                        {episode.title || `${episode.number}-seriya`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Additional info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-white/5">

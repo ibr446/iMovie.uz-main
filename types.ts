@@ -5,6 +5,9 @@ export interface Movie {
   poster: string;
   backdrop: string;
   videoUrl: string;
+  contentType?: 'movie' | 'series';
+  episodes?: MovieEpisode[];
+  audioUrls?: AudioUrls;
   subtitleUrls?: SubtitleUrls;
   year: number;
   genre: string[];
@@ -19,7 +22,20 @@ export interface Movie {
 
 export type Language = 'en' | 'ru' | 'uz';
 
+export interface MovieEpisode {
+  number: number;
+  title?: string;
+  videoUrl: string;
+}
+
 export interface SubtitleUrls {
+  en?: string;
+  ru?: string;
+  uz?: string;
+}
+
+export interface AudioUrls {
+  original?: string;
   en?: string;
   ru?: string;
   uz?: string;

@@ -43,6 +43,7 @@ def _short_to_response(db: Session, short: ShortVideo, user: User | None = None)
 
     return ShortVideoResponse(
         id=short.id,
+        movieId=short.movie_id,
         author=short.author,
         name=short.name,
         avatar=short.avatar,
@@ -84,7 +85,7 @@ def get_shorts(
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user),
 ):
-    shorts = db.query(ShortVideo).order_by(ShortVideo.created_at.desc()).all()
+    shorts = db.query(ShortVideo).order_by(ShortVideo.id.asc()).all()
     return [_short_to_response(db, short, user) for short in shorts]
 
 
@@ -97,6 +98,7 @@ def create_short(
     short = ShortVideo(
         id=f"short-{uuid.uuid4().hex[:12]}",
         user_id=admin.id,
+        movie_id=data.movieId,
         author=data.author,
         name=data.name,
         avatar=data.avatar,
@@ -122,6 +124,8 @@ def update_short(
 ):
     short = _get_short_or_404(db, short_id)
 
+    if data.movieId is not None:
+        short.movie_id = data.movieId
     if data.author is not None:
         short.author = data.author
     if data.name is not None:

@@ -20,6 +20,14 @@ const DESKTOP_BACKDROPS: BackdropRule[] = [
     patterns: ['dastur', 'sociallink'],
     image: '/photos/maxresdefault.jpg',
   },
+  {
+    patterns: ['true education', 'haqiqiy ta’lim'],
+    image: '/photos/true.jpg'
+  },
+  {
+    patterns: ['bloodhounds', 'ovchi itla'],
+    image: '/photos/blood.jfif'
+  }
 ];
 
 const MOBILE_BACKDROPS: BackdropRule[] = [
@@ -31,6 +39,14 @@ const MOBILE_BACKDROPS: BackdropRule[] = [
     patterns: ['dastur', 'sociallink'],
     image: '/photos/dastur.webp',
   },
+  {
+    patterns: ['true education', 'haqiqiy ta’lim'],
+    image: '/photos/true.jpg'
+  },
+  {
+    patterns: ['bloodhounds', 'ovchi itla'],
+    image: '/photos/blood.jfif'
+  }
 ];
 
 function getMovieSearchText(movie: Movie): string {

@@ -16,8 +16,63 @@ interface MovieContextType {
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
 
+const isTrueEducationMovie = (movie: Movie) => (
+  Object.values(movie.title || {})
+    .join(' ')
+    .toLowerCase()
+    .includes('true education')
+);
+
+const normalizeMovieContent = (movie: Movie): Movie => {
+  // Keep backend truth: если contentType === 'series', то episodes должны быть сериальными.
+  // Сейчас логика ниже может "переклеивать" не-True-Education фильмы в series.
+
+  // True Education special: auto-generate episodes if missing.
+  if (isTrueEducationMovie(movie)) {
+    if (movie.contentType !== 'series') {
+      return {
+        ...movie,
+        contentType: 'series',
+        episodes: Array.from({ length: 10 }, (_, index) => ({
+          number: index + 1,
+          title: `${index + 1}-seriya`,
+          videoUrl: movie.videoUrl,
+        })),
+      };
+    }
+
+    if (movie.episodes?.length) {
+      return {
+        ...movie,
+        contentType: 'series',
+        episodes: movie.episodes,
+      };
+    }
+
+    return {
+      ...movie,
+      contentType: 'series',
+      episodes: Array.from({ length: 10 }, (_, index) => ({
+        number: index + 1,
+        title: `${index + 1}-seriya`,
+        videoUrl: movie.videoUrl,
+      })),
+    };
+  }
+
+  // Non-True-Education: never force into series.
+  return {
+    ...movie,
+    // If backend says series - keep it. Otherwise keep as movie.
+    contentType: movie.contentType || 'movie',
+    episodes: movie.episodes || [],
+  };
+};
+
+const normalizeMovies = (items: Movie[]) => items.map(normalizeMovieContent);
+
 export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [movies, setMovies] = useState<Movie[]>(fallbackMovies);
+  const [movies, setMovies] = useState<Movie[]>(normalizeMovies(fallbackMovies));
   const [loading, setLoading] = useState(true);
 
   const fetchMovies = useCallback(async () => {
@@ -25,13 +80,13 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(true);
       const data = await apiGet<Movie[]>('/movies');
       if (data.length > 0) {
-        setMovies(data as Movie[]);
+        setMovies(normalizeMovies(data as Movie[]));
       } else {
-        setMovies(fallbackMovies);
+        setMovies(normalizeMovies(fallbackMovies));
       }
     } catch (err) {
       console.error('Failed to fetch movies:', err);
-      setMovies(fallbackMovies);
+      setMovies(normalizeMovies(fallbackMovies));
     } finally {
       setLoading(false);
     }
@@ -44,7 +99,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addMovie = async (movieData: Omit<Movie, 'id' | 'views'>) => {
     try {
       const newMovie = await apiPost<Movie>('/movies', movieData);
-      setMovies(prev => [newMovie, ...prev]);
+      setMovies(prev => [normalizeMovieContent(newMovie), ...prev]);
     } catch (err) {
       console.error('Failed to add movie:', err);
       throw err;
@@ -53,12 +108,14 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateMovie = async (movie: Movie) => {
     try {
-      const updated = await apiPut<Movie>(`/movies/${movie.id}`, {
+      const updated = await apiPut<Movie>(`/movies/${movie.id}`,{
         title: movie.title,
         description: movie.description,
         poster: movie.poster,
         backdrop: movie.backdrop,
         videoUrl: movie.videoUrl,
+        contentType: movie.contentType || 'movie',
+        episodes: movie.episodes || [],
         year: movie.year,
         genre: movie.genre,
         rating: movie.rating,
@@ -67,7 +124,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isTrending: movie.isTrending,
         isNew: movie.isNew,
       });
-      setMovies(prev => prev.map(m => m.id === movie.id ? updated : m));
+      setMovies(prev => prev.map(m => m.id === movie.id ? normalizeMovieContent(updated) : m));
     } catch (err) {
       console.error('Failed to update movie:', err);
       throw err;

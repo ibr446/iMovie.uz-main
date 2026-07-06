@@ -39,6 +39,8 @@ class Movie(Base):
     poster = Column(String, default="")
     backdrop = Column(String, default="")
     video_url = Column(String, default="")
+    content_type = Column(String, default="movie")
+    episodes = Column(JSON, default=list)
     year = Column(Integer, default=2024)
     genre = Column(JSON, default=list)  # stored as JSON array
     rating = Column(Float, default=0.0)
@@ -101,6 +103,7 @@ class ShortVideo(Base):
 
     id = Column(String, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    movie_id = Column(String, ForeignKey("movies.id", ondelete="SET NULL"), nullable=True)
     author = Column(String, default="@imovie_official")
     name = Column(String, default="iMovie.uz")
     avatar = Column(String, default="")

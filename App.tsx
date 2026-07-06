@@ -18,6 +18,7 @@ import AdminPanel from './frontend/pages/Admin';
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
+  const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState<number | null>(null);
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [isWatching, setIsWatching] = useState(false);
   const { isAdmin } = useAuth();
@@ -45,6 +46,7 @@ const AppContent: React.FC = () => {
 
     if (page.startsWith('movie-')) {
       setSelectedMovieId(page.substring(6)); // Remove 'movie-' prefix
+      setSelectedEpisodeNumber(null);
       setCurrentPage('movie-detail');
     } else {
       setCurrentPage(page);
@@ -57,7 +59,7 @@ const AppContent: React.FC = () => {
   const renderHome = () => (
     <Home 
       onMovieClick={(id) => { setSelectedMovieId(id); setCurrentPage('movie-detail'); }}
-      onWatchClick={(id) => { setSelectedMovieId(id); setIsWatching(true); }}
+      onWatchClick={(id) => { setSelectedMovieId(id); setSelectedEpisodeNumber(null); setIsWatching(true); }}
       onCategoryClick={(genre) => {
         setSelectedGenre(genre);
         setCurrentPage('search');
@@ -72,9 +74,16 @@ const AppContent: React.FC = () => {
         return renderHome();
       case 'movie-detail':
         return selectedMovie ? (
-          <MovieDetails movie={selectedMovie} onWatch={() => setIsWatching(true)} onNavigate={handleNavigate} />
+          <MovieDetails
+            movie={selectedMovie}
+            onWatch={(_, episodeNumber) => {
+              setSelectedEpisodeNumber(episodeNumber || null);
+              setIsWatching(true);
+            }}
+            onNavigate={handleNavigate}
+          />
         ) : renderHome();
-      case 'shorts': return <Shorts />;
+      case 'shorts': return <Shorts onNavigate={handleNavigate} />;
       case 'search': return <Search initialGenre={selectedGenre} onMovieClick={(id) => { setSelectedMovieId(id); setCurrentPage('movie-detail'); }} />;
       case 'profile': return <Profile onNavigate={handleNavigate} />;
       case 'auth': return <Auth onSuccess={() => setCurrentPage('home')} />;
@@ -84,7 +93,7 @@ const AppContent: React.FC = () => {
   };
 
   if (isWatching && selectedMovie) {
-    return <Watch movie={selectedMovie} onBack={() => setIsWatching(false)} />;
+    return <Watch movie={selectedMovie} initialEpisodeNumber={selectedEpisodeNumber || undefined} onBack={() => setIsWatching(false)} />;
   }
 
   return (

@@ -70,7 +70,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
       {isMenuOpen && (
         <div className="mx-4 rounded-3xl border border-white/10 bg-black/80 p-3 shadow-2xl backdrop-blur-xl md:hidden">
           <button
-            type="button"
+            type="button" 
             onClick={toggleTheme}
             className="mb-2 flex w-full items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-left text-sm font-bold text-zinc-200"
           >
@@ -273,3 +273,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage }) => {
 };
 
 export default Navbar;
+
+
+

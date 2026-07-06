@@ -5,9 +5,11 @@ import { Movie } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
 import { apiPost } from '../../api';
 import styles from "./Watch.module.css";
+import Hls from "hls.js"
 
 interface WatchProps {
   movie: Movie;
+  initialEpisodeNumber?: number;
   onBack: () => void;
 }
 
@@ -20,6 +22,8 @@ function generateSubs(lines: string[], cycleSec = 4): Array<{ start: number; end
   }
   return result;
 }
+
+
 
 // const mockSubtitles: Record<string, Array<{ start: number; end: number; text: string }>> = {
 //   en: generateSubs([
@@ -53,10 +57,26 @@ const qualityOptions = [
 
 const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const demoVideoUrl = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+const languageLabels: Record<string, string> = {
+  original: 'Original',
+  en: 'English',
+  ru: 'Rus',
+  uz: "O'zbek",
+};
+const audioLabels: Record<string, string> = {
+  original: 'Original',
+  en: 'Eng Original',
+  ru: 'Rus Dublyaj',
+  uz: 'Uz Dublyaj',
+};
 
-const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
-  console.log('[Watch] Mounted, movie.id:', movie.id, 'subtitleUrls:', movie.subtitleUrls);
+const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) => {
   const { lang } = useTranslation();
+  const episodeOptions = useMemo(() => (
+    (movie.contentType === 'series' && movie.episodes?.length)
+      ? [...movie.episodes].sort((a, b) => a.number - b.number)
+      : []
+  ), [movie.contentType, movie.episodes]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -70,6 +90,8 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   const [settingsTab, setSettingsTab] = useState<'main' | 'quality' | 'speed' | 'subtitle'>('main');
   const [selectedQuality, setSelectedQuality] = useState('auto');
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [selectedAudioLang, setSelectedAudioLang] = useState('original');
+  const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(initialEpisodeNumber || episodeOptions[0]?.number || 1);
   
    // Subtitles
   const [subtitleLang, setSubtitleLang] = useState<string | null>(null);
@@ -83,9 +105,12 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimerRef = useRef<number | null>(null);
-  const videoSrc = useMemo(() => {
-    const rawUrl = movie.videoUrl.trim();
-    const backendOrigin = import.meta.env.PROD ? '' : `http://${window.location.hostname}:8000`;
+  const backendOrigin = useMemo(() => (
+    import.meta.env.PROD ? '' : `http://${window.location.hostname}:8000`
+  ), []);
+
+  const resolveMediaUrl = useCallback((url: string) => {
+    const rawUrl = url.trim();
 
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     if (rawUrl.startsWith('/')) return `${backendOrigin}${rawUrl}`;
@@ -93,7 +118,52 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
 
     const mediaPath = rawUrl.split('/').map(encodeURIComponent).join('/');
     return `${backendOrigin}/media/${mediaPath}`;
-  }, [movie.videoUrl]);
+  }, [backendOrigin]);
+
+  useEffect(() => {
+    const requestedEpisode = episodeOptions.find(episode => episode.number === initialEpisodeNumber);
+    setSelectedEpisodeNumber(requestedEpisode?.number || episodeOptions[0]?.number || 1);
+  }, [episodeOptions, initialEpisodeNumber, movie.id]);
+
+  const selectedEpisode = episodeOptions.find(episode => episode.number === selectedEpisodeNumber) || episodeOptions[0];
+  const activeVideoUrl = selectedEpisode?.videoUrl?.trim() || movie.videoUrl;
+
+  const audioOptions = useMemo(() => {
+    const urls = movie.audioUrls || {};
+    const options: Array<{ code: string; label: string; url: string }> = [];
+    const seenUrls = new Set<string>();
+
+    const addOption = (code: string, url?: string) => {
+      if (!url) return;
+      const resolved = resolveMediaUrl(url);
+      if (seenUrls.has(resolved) && code !== 'original') return;
+      seenUrls.add(resolved);
+      options.push({
+        code,
+        label: audioLabels[code] || code.toUpperCase(),
+        url,
+      });
+    };
+
+    addOption('original', selectedEpisode?.videoUrl || urls.original || movie.videoUrl);
+    if (selectedEpisode) return options;
+
+    addOption('en', urls.en);
+    addOption('ru', urls.ru);
+    addOption('uz', urls.uz);
+
+    return options.length ? options : [{ code: 'original', label: audioLabels.original, url: activeVideoUrl }];
+  }, [activeVideoUrl, movie.audioUrls, movie.videoUrl, resolveMediaUrl, selectedEpisode]);
+
+  useEffect(() => {
+    const preferred = audioOptions.find(option => option.code === lang)?.code || audioOptions[0]?.code || 'original';
+    setSelectedAudioLang(preferred);
+  }, [audioOptions, lang, movie.id]);
+
+  const selectedAudioOption = audioOptions.find(option => option.code === selectedAudioLang) || audioOptions[0];
+  const videoSrc = useMemo(() => (
+    resolveMediaUrl(selectedAudioOption?.url || activeVideoUrl)
+  ), [activeVideoUrl, resolveMediaUrl, selectedAudioOption]);
   const isHtmlSource = /\.html?($|[?#])/i.test(videoSrc);
 
   // Auto-play on mount + track view
@@ -137,75 +207,86 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
 
   useEffect(() => {
     let mounted = true;
-    async function loadSrt(url: string) {
+
+    const toSeconds = (value: string) => {
+      const time = value.trim().split(/\s+/)[0];
+      const parts = time.split(':');
+      if (parts.length < 2) return Number.NaN;
+
+      const secondsRaw = parts.pop() || '0';
+      const seconds = Number(secondsRaw.replace(',', '.'));
+      const minutes = Number(parts.pop() || '0');
+      const hours = Number(parts.pop() || '0');
+
+      return hours * 3600 + minutes * 60 + seconds;
+    };
+
+    const parseSubtitleText = (text: string) => {
+      const normalized = text.replace(/^\uFEFF/, '').replace(/^WEBVTT[^\n]*(\r?\n)+/i, '');
+      const items = normalized.split(/\r?\n\r?\n/).map(block => block.trim()).filter(Boolean);
+
+      return items.map(block => {
+        const lines = block.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        const timeIndex = lines.findIndex(line => line.includes('-->'));
+        if (timeIndex === -1) return null;
+
+        const [startRaw, endRaw] = lines[timeIndex].split('-->').map(part => part.trim());
+        const start = toSeconds(startRaw);
+        const end = toSeconds(endRaw);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+
+        const textLines = lines.slice(timeIndex + 1).join('\n').trim();
+        if (!textLines) return null;
+        return { start, end, text: textLines };
+      }).filter((item): item is { start: number; end: number; text: string } => item !== null);
+    };
+
+    async function loadSubtitle(url: string) {
       try {
         const res = await fetch(url);
-        if (!res.ok) { console.warn('[Subtitle] Bad response for', url, res.status); return null; }
+        if (!res.ok) return null;
         const text = await res.text();
-      // very small srt parser
-        const items = text.split(/\r?\n\r?\n/).map(block => block.trim()).filter(Boolean);
-        const parsed = items.map(block => {
-          const parts = block.split(/\r?\n/);
-          if (parts.length < 3) return null;
-          const time = parts[1] || '';
-          if (!time.includes('-->')) return null;
-          const [startRaw, endRaw] = time.split('-->').map(s => s.trim());
-          const toSeconds = (t: string) => {
-            const m = t.split(/[:,.]/).map(Number);
-            if (m.length >= 4) return m[0]*3600 + m[1]*60 + m[2] + (m[3]/1000);
-            if (m.length === 3) return m[0]*60 + m[1] + (m[2]/1000);
-            return 0;
-          };
-          const start = toSeconds(startRaw);
-          const end = toSeconds(endRaw);
-          if (!isFinite(start) || !isFinite(end) || end <= start) return null;
-          const textLines = parts.slice(2).join('\n').trim();
-          if (!textLines) return null;
-          return { start, end, text: textLines };
-        }).filter((s): s is { start: number; end: number; text: string } => s !== null);
-        return parsed;
-      } catch (err) {
-        console.warn('[Subtitle] Error loading SRT:', err);
+        return parseSubtitleText(text);
+      } catch {
         return null;
       }
     }
 
     (async () => {
-      console.log('[Subtitle] movie.subtitleUrls:', movie.subtitleUrls, 'movie.id:', movie.id);
-      if (!movie.subtitleUrls) { console.log('[Subtitle] No subtitleUrls, skipping'); if (mounted) setRemoteSubs(null); return; }
-      const entries: Record<string, Array<{ start: number; end: number; text: string }>> = {};
-      for (const lang of Object.keys(movie.subtitleUrls) as Array<string>) {
-        const url = (movie.subtitleUrls as any)[lang];
-        if (!url) { console.log('[Subtitle] No URL for', lang); continue; }
-        const resolved = url.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`;
-        console.log('[Subtitle] Fetching', lang, 'from', resolved);
-        const parsed = await loadSrt(resolved);
-        console.log('[Subtitle] Parsed', lang, 'entries:', parsed ? parsed.length : 0);
-        if (parsed) entries[lang] = parsed;
+      if (!movie.subtitleUrls) {
+        if (mounted) {
+          setRemoteSubs(null);
+          setAvailableSubLangs([]);
+          setSubtitleLang(null);
+        }
+        return;
       }
-      console.log('[Subtitle] Final entries loaded:', Object.keys(entries).length > 0 ? Object.keys(entries) : 'none');
+
+      const entries: Record<string, Array<{ start: number; end: number; text: string }>> = {};
+      for (const code of Object.keys(movie.subtitleUrls) as Array<string>) {
+        const url = (movie.subtitleUrls as Record<string, string | undefined>)[code];
+        if (!url) continue;
+
+        const parsed = await loadSubtitle(resolveMediaUrl(url));
+        if (parsed?.length) entries[code] = parsed;
+      }
+
       const loadedLangs = Object.keys(entries);
       if (mounted) {
-        setRemoteSubs(Object.keys(entries).length ? entries : null);
+        setRemoteSubs(loadedLangs.length ? entries : null);
         setAvailableSubLangs(loadedLangs);
-        if (loadedLangs.length > 0 && !subtitleLang) {
-          const preferred = loadedLangs.find(l => l === lang) || loadedLangs[0];
-          console.log('[Subtitle] Auto-enabling subtitle for language:', preferred);
-          setSubtitleLang(preferred);
-        }
+        setSubtitleLang(loadedLangs.find(code => code === lang) || loadedLangs[0] || null);
       }
-    })().catch(err => console.warn('[Subtitle] Outer error:', err));
+    })().catch(() => {});
 
     return () => { mounted = false; };
-  }, [movie.id]);
+  }, [lang, movie.id, movie.subtitleUrls, resolveMediaUrl]);
 
   useEffect(() => {
     if (subtitleLang) {
       const subs = (remoteSubs && remoteSubs[subtitleLang]);
-      console.log('[Subtitle Render] lang:', subtitleLang, 'subs found:', !!subs, 'currentTime:', currentTime);
       if (!subs) { setCurrentSubtitle(''); return; }
       const active = subs.find(s => currentTime >= s.start && currentTime < s.end);
-      console.log('[Subtitle Render] active entry:', active);
       setCurrentSubtitle(active ? active.text : '');
     } else {
       setCurrentSubtitle('');
@@ -428,7 +509,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
             <span className="font-black text-white"> /media/videoplayback.mp4</span>.
           </p>
           <p className="mt-3 break-all rounded-xl bg-white/5 px-4 py-3 text-xs text-zinc-400">
-            Hozirgi URL: {movie.videoUrl}
+            Hozirgi URL: {activeVideoUrl}
           </p>
         </div>
       </div>
@@ -470,7 +551,7 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
             <h2 className="text-2xl font-black text-white">Video ochilmadi</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">{videoError}</p>
             <p className="mt-3 break-all rounded-xl bg-white/5 px-4 py-3 text-xs text-zinc-400">
-              {movie.videoUrl}
+              {activeVideoUrl}
             </p>
             <button
               type="button"
@@ -512,17 +593,45 @@ const Watch: React.FC<WatchProps> = ({ movie, onBack }) => {
             </div>
           </button>
 
-
+          <div className="flex items-center gap-3">
+          {episodeOptions.length > 0 && (
+            <label className="flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-black text-white shadow-xl backdrop-blur-md">
+              <span className="text-xs uppercase tracking-widest text-white/55">Episode</span>
+              <select
+                value={selectedEpisodeNumber}
+                onClick={e => e.stopPropagation()}
+                onChange={e => setSelectedEpisodeNumber(parseInt(e.target.value, 10))}
+                className="max-w-[170px] bg-transparent text-sm font-black text-white outline-none"
+              >
+                {episodeOptions.map(episode => (
+                  <option key={episode.number} value={episode.number} className="bg-zinc-950">
+                    {episode.number}. {episode.title || `${episode.number}-seriya`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <div className={styles.choose__lan}>
             <label className={styles.choose} aria-label="Audio language">
               <Volume2 className={styles.choose__icon} size={16} />
-              <select name="language" id="language" className={styles.choose__type}>
-                <option value="english" className={styles.option}>Eng Original</option>
-                <option value="russian" className={styles.option}>Rus Dublyaj</option>
-                <option value="uzbek" className={styles.option}>Uz Dublyaj</option>
+              <select
+                name="language"
+                id="language"
+                className={styles.choose__type}
+                value={selectedAudioLang}
+                disabled={audioOptions.length <= 1}
+                onClick={e => e.stopPropagation()}
+                onChange={e => setSelectedAudioLang(e.target.value)}
+              >
+                {audioOptions.map(option => (
+                  <option key={option.code} value={option.code} className={styles.option}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </label>
+          </div>
           </div>
 
 

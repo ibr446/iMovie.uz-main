@@ -15,9 +15,12 @@ import {
   X,
 } from 'lucide-react';
 import { apiGet, apiPost } from '../../api';
+import { useMovies } from '../context/MovieContext';
+import { Movie } from '../../types';
 
 interface ShortItem {
   id: string;
+  movieId?: string | null;
   author: string;
   name: string;
   avatar: string;
@@ -44,11 +47,14 @@ interface ShortComment {
   date: string;
 }
 
-const firstShortVideoUrl = '/shorts/first-short.mp4';
+interface ShortsProps {
+  onNavigate: (page: string) => void;
+}
 
 const fallbackShorts: ShortItem[] = [
   {
     id: 'short-1',
+    movieId: '282b83943421',
     author: '@imovie_official',
     name: 'iMovie.uz',
     avatar: 'https://picsum.photos/seed/imovie-official/96/96',
@@ -56,7 +62,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 3,
     shares: 842,
     views: 118000,
-    videoUrl: "1.mp4",
+    videoUrl: 'Movie.mp4',
     caption: "The Cosmic Horizon sahnasidan maxsus lavha. Katta ekranga tayyormisiz?",
     audio: 'iMovie.uz Original Sound',
     location: 'Tashkent',
@@ -64,6 +70,7 @@ const fallbackShorts: ShortItem[] = [
   },
   {
     id: 'short-2',
+    movieId: '27bdd5ff1829',
     author: '@cine_lover',
     name: 'Cine Lover',
     avatar: 'https://picsum.photos/seed/cine-lover/96/96',
@@ -71,7 +78,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 2100,
     views: 540000,
-    videoUrl: 'football.mp4',
+    videoUrl: 'videoplayback.mp4',
     caption: "Aktyorlar kulgudan sahnani tugata olmagan payt. Bu kadrni ko'ring!",
     audio: 'Comedy Club Tashkent - Bloopers',
     location: 'Samarkand',
@@ -79,6 +86,7 @@ const fallbackShorts: ShortItem[] = [
   },
   {
     id: 'short-3',
+    movieId: 'avengers-local-2',
     author: '@moviecuts',
     name: 'Movie Cuts',
     avatar: 'https://picsum.photos/seed/movie-cuts/96/96',
@@ -86,7 +94,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 1600,
     views: 276000,
-    videoUrl: 'videoplayback(1).mp4',
+    videoUrl: 'videoplayback.mp4',
     caption: "Eng kuchli trailer momentlari bir joyda. Saqlab qo'ying.",
     audio: 'Epic Trailer Mix',
     location: 'Bukhara',
@@ -125,7 +133,40 @@ const getPlayableShortUrl = (url: string) => {
   return `${backendOrigin}/short-videos/${encodePath(rawUrl)}`;
 };
 
-const Shorts: React.FC = () => {
+const normalizeSearchText = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+const getVideoToken = (url: string) => {
+  const cleanUrl = url.trim().replace(/\\/g, '/').split(/[?#]/)[0];
+  const fileName = cleanUrl.split('/').pop() || cleanUrl;
+  return normalizeSearchText(fileName.replace(/\.[^.]+$/, ''));
+};
+
+const findRelatedMovie = (short: ShortItem, movies: Movie[]) => {
+  if (short.movieId) {
+    const exactMovie = movies.find((movie) => String(movie.id) === String(short.movieId));
+    if(exactMovie) return exactMovie;
+  }
+
+  const shortVideoToken = getVideoToken(short.videoUrl);
+  const videoMatch = movies.find((movie) => getVideoToken(movie.videoUrl) === shortVideoToken);
+  if (videoMatch) return videoMatch;
+
+  const shortText = normalizeSearchText([short.caption, short.audio, short.name, short.videoUrl].join(' '));
+  const titleMatch = movies.find((movie) => (
+    Object.values(movie.title).some((title) => {
+      const titleToken = normalizeSearchText(title);
+      short.caption.toLowerCase().includes(title.toLowerCase());
+    })
+  ));
+
+  if(titleMatch) return titleMatch;
+
+  return movies.length > 0 ? movies[0] : n
+};
+  
+
+const Shorts: React.FC<ShortsProps> = ({ onNavigate }) => {
+  const { movies } = useMovies();
   const [shorts, setShorts] = useState<ShortItem[]>(fallbackShorts);
   const [activeIdx, setActiveIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -144,8 +185,14 @@ const Shorts: React.FC = () => {
     () => getPlayableShortUrl(activeShort.videoUrl),
     [activeShort.videoUrl],
   );
+  const relatedMovie = useMemo(
+    () => findRelatedMovie(activeShort, movies),
+    [activeShort, movies],
+  );
   const isLiked = !!activeShort.isLiked;
   const isSaved = !!activeShort.isSaved;
+
+  
 
   const updateShort = (shortId: string, updater: (short: ShortItem) => ShortItem) => {
     setShorts((items) => items.map((short) => (short.id === shortId ? updater(short) : short)));
@@ -331,6 +378,19 @@ const Shorts: React.FC = () => {
     window.setTimeout(() => setShareMessage(''), 1600);
   };
 
+  const openRelatedMovie = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!relatedMovie) {
+      setShareMessage('Kino topilmadi');
+      window.setTimeout(() => setShareMessage(''), 1600);
+      return;
+    }
+
+    onNavigate(`movie-${relatedMovie.id}`);
+  };
+
   useEffect(() => {
     if (!showComments) return;
 
@@ -484,6 +544,15 @@ const Shorts: React.FC = () => {
               <p className={`${isInfoExpanded ? 'line-clamp-2 text-sm' : 'line-clamp-1 text-xs'} font-semibold leading-snug text-white drop-shadow`}>
                 {activeShort.caption}
               </p>
+
+              <button
+                type="button"
+                onClick={openRelatedMovie}
+                className={`${isInfoExpanded ? 'px-3 py-1.5 text-xs' : 'px-2.5 py-1 text-[11px]'} flex w-fit max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white text-black font-black shadow-lg transition hover:bg-yellow-300 active:scale-95`}
+              >
+                <Play size={isInfoExpanded ? 14 : 12} className="fill-current" />
+                <span>Kinoni ko'rish</span>
+              </button>
 
               {isInfoExpanded && (
                 <>

@@ -69,12 +69,27 @@ class SubtitleUrls(BaseModel):
     uz: Optional[str] = None
 
 
+class AudioUrls(BaseModel):
+    original: Optional[str] = None
+    en: Optional[str] = None
+    ru: Optional[str] = None
+    uz: Optional[str] = None
+
+
+class MovieEpisode(BaseModel):
+    number: int
+    title: str = ""
+    videoUrl: str = ""
+
+
 class MovieCreate(BaseModel):
     title: MovieTitle
     description: MovieDescription
     poster: str = ""
     backdrop: str = ""
     videoUrl: str = ""
+    contentType: str = "movie"
+    episodes: list[MovieEpisode] = []
     year: int = 2024
     genre: list[str] = []
     rating: float = 0.0
@@ -90,6 +105,8 @@ class MovieUpdate(BaseModel):
     poster: Optional[str] = None
     backdrop: Optional[str] = None
     videoUrl: Optional[str] = None
+    contentType: Optional[str] = None
+    episodes: Optional[list[MovieEpisode]] = None
     subtitleUrls: Optional[SubtitleUrls] = None
     year: Optional[int] = None
     genre: Optional[list[str]] = None
@@ -107,6 +124,9 @@ class MovieResponse(BaseModel):
     poster: str
     backdrop: str
     videoUrl: str
+    contentType: str = "movie"
+    episodes: list[MovieEpisode] = []
+    audioUrls: AudioUrls = AudioUrls()
     subtitleUrls: SubtitleUrls = SubtitleUrls()
     year: int
     genre: list[str]
@@ -162,6 +182,7 @@ class StatsResponse(BaseModel):
 # Shorts
 
 class ShortVideoCreate(BaseModel):
+    movieId: Optional[str] = None
     author: str = "@imovie_official"
     name: str = "iMovie.uz"
     avatar: str = ""
@@ -173,6 +194,7 @@ class ShortVideoCreate(BaseModel):
 
 
 class ShortVideoUpdate(BaseModel):
+    movieId: Optional[str] = None
     author: Optional[str] = None
     name: Optional[str] = None
     avatar: Optional[str] = None
@@ -185,6 +207,7 @@ class ShortVideoUpdate(BaseModel):
 
 class ShortVideoResponse(BaseModel):
     id: str
+    movieId: Optional[str] = None
     author: str
     name: str
     avatar: str

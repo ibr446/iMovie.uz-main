@@ -3,6 +3,7 @@ import uvicorn
 import os
 import sys
 import uuid
+import json
 from contextlib import asynccontextmanager
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -11,6 +12,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, or_, text
 
 from database import engine, SessionLocal, Base
 from models import User, Movie, ShortVideo
@@ -156,6 +158,8 @@ def discover_local_movies() -> list[dict[str, str]]:
                 "poster": "/photos/maxresdefault.jpg",
                 "backdrop": "/photos/maxresdefault.jpg",
                 "video_url": f"/media/{relative_path.replace('\\', '/')}",
+                "content_type": "movie",
+                "episodes": [],
                 "year": 2024,
                 "genre": ["Drama"],
                 "rating": 7.0,
@@ -390,9 +394,14 @@ def seed_shorts():
     db = SessionLocal()
     try:
         local_video_urls = {
-            "short-1": "1.mp4",
+            "short-1": "Movie.mp4",
             "short-2": "football.mp4",
             "short-3": "videoplayback (1).mp4",
+        }
+        related_movie_ids = {
+            "short-1": "282b83943421",
+            "short-2": "27bdd5ff1829",
+            "short-3": "avengers-local-2",
         }
 
         if db.query(ShortVideo).count() > 0:
@@ -401,6 +410,10 @@ def seed_shorts():
                 short = db.query(ShortVideo).filter(ShortVideo.id == short_id).first()
                 if short and resolve_short_path(video_url) and short.video_url != video_url:
                     short.video_url = video_url
+                    changed = True
+                movie_id = related_movie_ids.get(short_id)
+                if short and movie_id and short.movie_id != movie_id:
+                    short.movie_id = movie_id
                     changed = True
             if changed:
                 db.commit()
@@ -411,10 +424,11 @@ def seed_shorts():
             ShortVideo(
                 id="short-1",
                 user_id="admin-1",
+                movie_id=related_movie_ids["short-1"],
                 author="@imovie_official",
                 name="iMovie.uz",
                 avatar="https://picsum.photos/seed/imovie-official/96/96",
-                video_url="1.mp4",
+                video_url="Movie.mp4",
                 caption="The Cosmic Horizon sahnasidan maxsus lavha. Katta ekranga tayyormisiz?",
                 audio="iMovie.uz Original Sound",
                 location="Tashkent",
@@ -426,6 +440,7 @@ def seed_shorts():
             ShortVideo(
                 id="short-2",
                 user_id="admin-1",
+                movie_id=related_movie_ids["short-2"],
                 author="@cine_lover",
                 name="Cine Lover",
                 avatar="https://picsum.photos/seed/cine-lover/96/96",
@@ -441,6 +456,7 @@ def seed_shorts():
             ShortVideo(
                 id="short-3",
                 user_id="admin-1",
+                movie_id=related_movie_ids["short-3"],
                 author="@moviecuts",
                 name="Movie Cuts",
                 avatar="https://picsum.photos/seed/movie-cuts/96/96",
@@ -569,15 +585,91 @@ def sync_deployed_content():
         db.close()
 
 
+def ensure_short_video_movie_id_column():
+    inspector = inspect(engine)
+    if "short_videos" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("short_videos")}
+    if "movie_id" in columns:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE short_videos ADD COLUMN movie_id VARCHAR"))
+    print("Added movie_id column to short_videos")
+
+
+def ensure_movie_episode_columns():
+    inspector = inspect(engine)
+    if "movies" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("movies")}
+    with engine.begin() as connection:
+        if "content_type" not in columns:
+            connection.execute(text("ALTER TABLE movies ADD COLUMN content_type VARCHAR DEFAULT 'movie'"))
+            print("Added content_type column to movies")
+        if "episodes" not in columns:
+            connection.execute(text("ALTER TABLE movies ADD COLUMN episodes JSON DEFAULT '[]'"))
+            print("Added episodes column to movies")
+
+
+def ensure_true_education_episodes():
+    db = SessionLocal()
+    try:
+        matches = db.query(Movie).filter(
+            or_(
+                Movie.title_en.ilike("%true education%"),
+                Movie.title_ru.ilike("%true education%"),
+                Movie.title_uz.ilike("%true education%"),
+                Movie.title_uz.ilike("%haqiqiy%ta%lim%"),
+            )
+        ).all()
+
+        changed = False
+        for movie in matches:
+            existing = movie.episodes or []
+            if isinstance(existing, str):
+                try:
+                    existing = json.loads(existing)
+                except json.JSONDecodeError:
+                    existing = []
+            if movie.content_type != "series":
+                movie.content_type = "series"
+                changed = True
+            if len(existing) != 10:
+                movie.episodes = [
+                    {
+                        "number": index,
+                        "title": f"{index}-seriya",
+                        "videoUrl": (existing[index - 1].get("videoUrl") if index <= len(existing) and isinstance(existing[index - 1], dict) else "") or movie.video_url,
+                    }
+                    for index in range(1, 11)
+                ]
+                changed = True
+
+        if changed:
+            db.commit()
+            print("Ensured True Education has 10 episodes")
+    except Exception as e:
+        print(f"True Education episode sync error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: create tables and seed data on startup."""
     # Create all database tables
     Base.metadata.create_all(bind=engine)
+    ensure_movie_episode_columns()
+    ensure_short_video_movie_id_column()
     # Seed initial data
     seed_database()
-    seed_shorts()
     sync_deployed_content()
+    ensure_true_education_episodes()
+    seed_shorts()
     print("iMovie.uz Backend is running!")
     print("API Docs: http://localhost:8000/docs")
     yield

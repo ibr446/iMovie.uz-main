@@ -16,7 +16,7 @@ interface StatsData {
 
 const AdminPanel: React.FC = () => {
   const { t, lang } = useTranslation();
-  const { movies, addMovie, updateMovie, deleteMovie } = useMovies();
+  const { movies, addMovie, updateMovie, deleteMovie, refreshMovies } = useMovies();
   const [activeTab, setActiveTab] = useState('movies');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMovieId, setEditingMovieId] = useState<string | null>(null);
@@ -33,12 +33,44 @@ const AdminPanel: React.FC = () => {
     views: 0,
     poster: '',
     backdrop: '',
-    videoUrl: 'Avengers.mp4',
+    videoUrl: '',
+    contentType: 'movie',
+    episodes: [],
     duration: '1h 30m',
     country: 'USA'
   });
 
   const [newMovie, setNewMovie] = useState<Partial<Movie>>(createEmptyMovieForm);
+
+const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbackVideoUrl = newMovie.videoUrl || '') => (
+    Array.from({ length: Math.max(1, count) }, (_, index) => {
+      const number = index + 1;
+      const existing = current.find(episode => episode.number === number) || current[index];
+      return {
+        number,
+        title: existing?.title || `${number}-seriya`,
+        videoUrl: existing?.videoUrl || fallbackVideoUrl,
+      };
+    })
+  );
+
+  const setEpisodeCount = (count: number) => {
+    setNewMovie(prev => ({
+      ...prev,
+      contentType: 'series',
+      episodes: buildEpisodes(count, prev.episodes || [], prev.videoUrl || ''),
+    }));
+  };
+
+
+  const updateEpisode = (number: number, field: 'title' | 'videoUrl', value: string) => {
+    setNewMovie(prev => ({
+      ...prev,
+      episodes: buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], prev.videoUrl || '').map(episode => (
+        episode.number === number ? { ...episode, [field]: value } : episode
+      )),
+    }));
+  };
 
   // Fetch stats from API
   useEffect(() => {
@@ -70,6 +102,8 @@ const AdminPanel: React.FC = () => {
       title: { ...movie.title },
       description: { ...movie.description },
       genre: [...movie.genre],
+      contentType: movie.contentType || (movie.episodes?.length ? 'series' : 'movie'),
+      episodes: movie.episodes ? movie.episodes.map(episode => ({ ...episode })) : [],
     });
     setShowAddModal(true);
   };
@@ -84,13 +118,29 @@ const AdminPanel: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    console.log("NEW MOVIE STATE:", newMovie)
     try {
+      const contentType = newMovie.contentType === 'series' ? 'series' : 'movie';
+      const episodes = contentType === 'series'
+        ? buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], newMovie.videoUrl || '')
+        : [];
+
+      console.log('FINAL DATA:', {
+        contentType,
+        episodes,
+        newMovie
+      })
       const movieToSave = {
+        ...newMovie,
+        contentType,
+        episodes: contentType === "series" ? episodes : [],
         title: newMovie.title!,
         description: newMovie.description!,
         poster: newMovie.poster || '',
         backdrop: newMovie.backdrop || '',
         videoUrl: newMovie.videoUrl || '',
+        // contentType,
+        // episodes,
         year: newMovie.year || new Date().getFullYear(),
         genre: newMovie.genre || [],
         rating: newMovie.rating || 0,
@@ -99,6 +149,7 @@ const AdminPanel: React.FC = () => {
         isTrending: newMovie.isTrending ?? false,
         isNew: newMovie.isNew ?? true,
       };
+
       if (editingMovieId) {
         await updateMovie({
           ...(movieToSave as Omit<Movie, 'id' | 'views'>),
@@ -106,12 +157,14 @@ const AdminPanel: React.FC = () => {
           views: newMovie.views ?? 0,
         });
       } else {
-        await addMovie(movieToSave as any);
+        await addMovie(movieToSave);
       }
+      await refreshMovies();
       closeMovieModal();
     } catch (err) {
       console.error('Save failed:', err);
-      alert(`Failed to ${editingMovieId ? 'update' : 'save'} movie. Make sure you are logged in as admin.`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to ${editingMovieId ? 'update' : 'save'} movie: ${message}`);
     } finally {
       setSaving(false);
     }
@@ -155,7 +208,7 @@ const AdminPanel: React.FC = () => {
         {/* Management Table */}
         <div className="glass rounded-[40px] border border-white/10 overflow-hidden shadow-2xl">
           <div className="flex border-b border-white/5 overflow-x-auto no-scrollbar">
-            {['movies', 'users', 'comments', 'shorts'].map(tab => (
+                {['movies', 'series', 'users', 'comments', 'shorts'].map(tab => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -179,7 +232,12 @@ const AdminPanel: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {movies.map(movie => (
+                {(activeTab === 'series'
+                  ? movies.filter(m => m.contentType === "series")
+                  : activeTab === 'movies'
+                    ? movies.filter(m => m.contentType === "movie")
+                    : movies
+                ).map(movie => (
                   <tr key={movie.id} className="group hover:bg-white/5 transition-all">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -187,6 +245,9 @@ const AdminPanel: React.FC = () => {
                         <div>
                           <p className="font-bold text-white text-sm">{movie.title[lang]}</p>
                           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{movie.genre.join(', ')}</p>
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-blue-400">
+                            {(movie.contentType || 'movie') === 'series' ? `${movie.episodes?.length || 0} episodes` : 'Movie'}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -311,16 +372,88 @@ const AdminPanel: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Video URL (Direct link)</label>
-                <input 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="Avengers.mp4 yoki https://example.com/movie.mp4"
-                  value={newMovie.videoUrl}
-                  onChange={e => setNewMovie({ ...newMovie, videoUrl: e.target.value })}
-                />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Content type</label>
+                  <select
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={newMovie.contentType || 'movie'}
+                    onChange={e => {
+                      const contentType = e.target.value as Movie['contentType'];
+                      setNewMovie(prev => ({
+                        ...prev,
+                        contentType,
+                        episodes: contentType === 'series' ? buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], prev.videoUrl || '') : [],
+                      }));
+                    }}
+                  >
+                    <option value="movie" className="bg-zinc-950">Movie</option>
+                    <option value="series" className="bg-zinc-950">Series</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Episode count</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    disabled={(newMovie.contentType || 'movie') !== 'series'}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-40"
+                    value={(newMovie.contentType || 'movie') === 'series' ? (newMovie.episodes?.length || 1) : 1}
+                    onChange={e => setEpisodeCount(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-1">
+                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Main video URL</label>
+                  <input
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    placeholder="Avengers.mp4 yoki https://example.com/movie.mp4"
+                    value={newMovie.videoUrl}
+onChange={e => {
+                       const videoUrl = e.target.value;
+                       setNewMovie(prev => ({
+                         ...prev,
+                         videoUrl,
+                         episodes: prev.contentType === 'series' && prev.episodes?.length
+                           ? prev.episodes.map(episode => !episode.videoUrl ? { ...episode, videoUrl } : episode)
+                           : prev.episodes,
+                       }));
+                     }}
+                  />
+                </div>
               </div>
 
+              {(newMovie.contentType || 'movie') === 'series' && (
+                <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Episodes</label>
+                    <span className="text-xs font-bold text-zinc-500">{newMovie.episodes?.length || 1} total</span>
+                  </div>
+                  <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    {buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], newMovie.videoUrl || '').map(episode => (
+                      <div key={episode.number} className="grid grid-cols-1 gap-2 rounded-xl border border-white/5 bg-black/20 p-3 md:grid-cols-[92px_1fr_1.6fr]">
+                        <div className="flex items-center rounded-lg bg-white/5 px-3 text-xs font-black text-white">
+                          {episode.number}-seriya
+                        </div>
+                        <input
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          placeholder="Episode title"
+                          value={episode.title || ''}
+                          onChange={e => updateEpisode(episode.number, 'title', e.target.value)}
+                        />
+                        <input
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          placeholder="Episode video URL"
+                          value={episode.videoUrl || ''}
+                          onChange={e => updateEpisode(episode.number, 'videoUrl', e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Poster URL</label>

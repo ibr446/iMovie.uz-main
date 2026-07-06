@@ -7,6 +7,13 @@ from database import get_db
 from models import User, Movie, SavedMovie, WatchHistory
 from schemas import MovieResponse, MovieTitle, MovieDescription, PasswordUpdate, StatsResponse, UserResponse, UserUpdate
 from auth import require_auth, require_admin, hash_password, validate_password_strength, verify_password
+from routers.movies_router import (
+    _detect_audio_urls,
+    _detect_subtitle_urls,
+    _normalize_content_type,
+    _normalize_episodes,
+    ensure_movie_episode_columns,
+)
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -20,6 +27,10 @@ def _movie_to_response(movie: Movie) -> MovieResponse:
         poster=movie.poster,
         backdrop=movie.backdrop,
         videoUrl=movie.video_url,
+        contentType=_normalize_content_type(movie.content_type),
+        episodes=_normalize_episodes(movie.episodes),
+        audioUrls=_detect_audio_urls(movie.video_url),
+        subtitleUrls=_detect_subtitle_urls(movie.video_url),
         year=movie.year,
         genre=movie.genre or [],
         rating=movie.rating,
@@ -89,6 +100,7 @@ def update_password(data: PasswordUpdate, user: User = Depends(require_auth), db
 @router.get("/saved", response_model=list[MovieResponse])
 def get_saved_movies(user: User = Depends(require_auth), db: Session = Depends(get_db)):
     """Get the current user's saved movies list."""
+    ensure_movie_episode_columns()
     saved = (
         db.query(Movie)
         .join(SavedMovie, SavedMovie.movie_id == Movie.id)
@@ -140,6 +152,7 @@ def unsave_movie(movie_id: str, user: User = Depends(require_auth), db: Session 
 @router.get("/history", response_model=list[MovieResponse])
 def get_watch_history(user: User = Depends(require_auth), db: Session = Depends(get_db)):
     """Get the current user's watch history."""
+    ensure_movie_episode_columns()
     history = (
         db.query(Movie)
         .join(WatchHistory, WatchHistory.movie_id == Movie.id)
@@ -153,6 +166,7 @@ def get_watch_history(user: User = Depends(require_auth), db: Session = Depends(
 @router.post("/history/{movie_id}", status_code=status.HTTP_201_CREATED)
 def add_to_history(movie_id: str, user: User = Depends(require_auth), db: Session = Depends(get_db)):
     """Add a movie to the user's watch history."""
+    ensure_movie_episode_columns()
     movie = db.query(Movie).filter(Movie.id == movie_id).first()
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
