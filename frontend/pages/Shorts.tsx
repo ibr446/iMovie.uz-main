@@ -47,6 +47,8 @@ interface ShortComment {
   date: string;
 }
 
+
+
 interface ShortsProps {
   onNavigate: (page: string) => void;
 }
@@ -78,7 +80,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 2100,
     views: 540000,
-    videoUrl: 'videoplayback.mp4',
+    videoUrl: 'Movie.mp4',
     caption: "Aktyorlar kulgudan sahnani tugata olmagan payt. Bu kadrni ko'ring!",
     audio: 'Comedy Club Tashkent - Bloopers',
     location: 'Samarkand',
@@ -94,7 +96,7 @@ const fallbackShorts: ShortItem[] = [
     comments: 0,
     shares: 1600,
     views: 276000,
-    videoUrl: 'videoplayback.mp4',
+    videoUrl: 'Movie.mp4',
     caption: "Eng kuchli trailer momentlari bir joyda. Saqlab qo'ying.",
     audio: 'Epic Trailer Mix',
     location: 'Bukhara',

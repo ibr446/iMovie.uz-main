@@ -102,7 +102,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
       title: { ...movie.title },
       description: { ...movie.description },
       genre: [...movie.genre],
-      contentType: movie.contentType || (movie.episodes?.length ? 'series' : 'movie'),
+      contentType: movie.contentType ?? "movie",
       episodes: movie.episodes ? movie.episodes.map(episode => ({ ...episode })) : [],
     });
     setShowAddModal(true);

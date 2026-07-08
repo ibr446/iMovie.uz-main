@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, or_, text
 
-from database import engine, get_db
+from ..database import engine, get_db
 from models import Movie, User
 from schemas import MovieCreate, MovieUpdate, MovieResponse, MovieTitle, MovieDescription
 from auth import get_current_user, require_admin
@@ -326,6 +326,7 @@ def update_movie(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
+    print("KELGAN DATA", data.dict())
     """Update a movie (admin only)."""
     ensure_movie_episode_columns()
     movie = db.query(Movie).filter(Movie.id == movie_id).first()
@@ -347,13 +348,13 @@ def update_movie(
     if data.videoUrl is not None:
         movie.video_url = data.videoUrl
     # Debug log for admin updates
-    try:
-        print("[ADMIN UPDATE]", movie_id, "contentType=", data.contentType, "episodes=", (len(data.episodes) if data.episodes else None))
-    except Exception:
-        pass
+    # try:
+    #     print("[ADMIN UPDATE]", movie_id, "contentType=", data.contentType, "episodes=", (len(data.episodes) if data.episodes else None))
+    # except Exception:
+    #     pass
 
     if data.contentType is not None:
-        movie.content_type = _normalize_content_type(data.contentType)
+        movie.content_type = data.contentType
     if data.episodes is not None:
         movie.episodes = _normalize_episodes(data.episodes)
     if data.year is not None:

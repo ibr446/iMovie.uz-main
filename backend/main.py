@@ -157,7 +157,7 @@ def discover_local_movies() -> list[dict[str, str]]:
                 "description_uz": "Movies papkasidagi mahalliy film.",
                 "poster": "/photos/maxresdefault.jpg",
                 "backdrop": "/photos/maxresdefault.jpg",
-                "video_url": f"/media/{relative_path.replace('\\', '/')}",
+                "video_url": f"/media/{relative_path.replace(os.sep, '/')}",
                 "content_type": "movie",
                 "episodes": [],
                 "year": 2024,
@@ -173,38 +173,50 @@ def discover_local_movies() -> list[dict[str, str]]:
 
 
 def seed_database():
-    """Seed the database with initial data if empty."""
+    """Upsert seed data so updates apply even if DB already has rows."""
     db = SessionLocal()
     try:
-        # If any movies already exist, assume this database is seeded.
-        if db.query(Movie).count() > 0:
-            return
+        print("🌱 Seeding/Upserting database...")
 
-        print("🌱 Seeding database...")
+        # Upsert admin user
+        admin = db.query(User).filter(User.id == "admin-1").first()
+        if not admin:
+            admin = User(
+                id="admin-1",
+                name="Super Admin",
+                email="admin@imovie.uz",
+                hashed_password=hash_password("admin123"),
+                avatar="https://picsum.photos/seed/admin/100/100",
+                role="admin",
+            )
+            db.add(admin)
+        else:
+            admin.name = "Super Admin"
+            admin.email = "admin@imovie.uz"
+            admin.hashed_password = hash_password("admin123")
+            admin.avatar = "https://picsum.photos/seed/admin/100/100"
+            admin.role = "admin"
 
-        # Create admin user
-        admin = User(
-            id="admin-1",
-            name="Super Admin",
-            email="admin@imovie.uz",
-            hashed_password=hash_password("admin123"),
-            avatar="https://picsum.photos/seed/admin/100/100",
-            role="admin",
-        )
-        db.add(admin)
+        # Upsert demo user
+        demo_user = db.query(User).filter(User.id == "user-demo1").first()
+        if not demo_user:
+            demo_user = User(
+                id="user-demo1",
+                name="Demo User",
+                email="user@imovie.uz",
+                hashed_password=hash_password("user123"),
+                avatar="https://picsum.photos/seed/demo/100/100",
+                role="user",
+            )
+            db.add(demo_user)
+        else:
+            demo_user.name = "Demo User"
+            demo_user.email = "user@imovie.uz"
+            demo_user.hashed_password = hash_password("user123")
+            demo_user.avatar = "https://picsum.photos/seed/demo/100/100"
+            demo_user.role = "user"
 
-        # Create demo user
-        demo_user = User(
-            id="user-demo1",
-            name="Demo User",
-            email="user@imovie.uz",
-            hashed_password=hash_password("user123"),
-            avatar="https://picsum.photos/seed/demo/100/100",
-            role="user",
-        )
-        db.add(demo_user)
-
-        # Seed movies
+        # Seed movies (upsert by id)
         movies_data = [
             Movie(
                 id="1",
@@ -219,7 +231,7 @@ def seed_database():
                 video_url="/media/videoplayback.mp4",
                 year=2024,
                 genre=["Sci-Fi", "Adventure"],
-                rating=8.9, 
+                rating=8.9,
                 duration="2h 15m",
                 country="USA",
                 is_trending=True,
@@ -369,9 +381,32 @@ def seed_database():
         ]
 
         for movie in movies_data:
-            db.add(movie)
+            existing = db.query(Movie).filter(Movie.id == movie.id).first()
+            if not existing:
+                db.add(movie)
+            else:
+                # Update all seed fields
+                existing.title_en = movie.title_en
+                existing.title_ru = movie.title_ru
+                existing.title_uz = movie.title_uz
+                existing.description_en = movie.description_en
+                existing.description_ru = movie.description_ru
+                existing.description_uz = movie.description_uz
+                existing.poster = movie.poster
+                existing.backdrop = movie.backdrop
+                existing.video_url = movie.video_url
+                existing.content_type = movie.content_type
+                existing.episodes = movie.episodes
+                existing.year = movie.year
+                existing.genre = movie.genre
+                existing.rating = movie.rating
+                existing.duration = movie.duration
+                existing.country = movie.country
+                existing.is_trending = movie.is_trending
+                existing.is_new = movie.is_new
+                existing.views = movie.views
 
-        # Try to detect local movie files and seed them as well
+        # Local movie discovery: insert missing only
         local_movie_entries = discover_local_movies()
         for local_data in local_movie_entries:
             if db.query(Movie).filter(Movie.id == local_data["id"]).first():
@@ -379,7 +414,7 @@ def seed_database():
             db.add(Movie(**local_data))
 
         db.commit()
-        print(f"✅ Seeded {len(movies_data) + len(local_movie_entries)} movies, admin + demo user created")
+        print("✅ Seed upsert complete")
         print("   Admin: admin@imovie.uz / admin123")
         print("   Demo:  user@imovie.uz / user123")
 
@@ -388,6 +423,7 @@ def seed_database():
         db.rollback()
     finally:
         db.close()
+
 
 
 def seed_shorts():

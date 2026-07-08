@@ -1,8 +1,5 @@
-# TODO
-
-- [ ] Fix Admin panel tab logic so switching to “series” actually filters/updates UI.
-- [ ] Ensure MovieContext / backend endpoint returns contentType properly and episodes normalization is consistent.
-- [ ] Add/adjust state in Admin.tsx: track active content type (movie vs series) and render filtered list.
-- [ ] Update delete/edit/save logic to respect the selected content type.
-- [ ] Test in browser: add/edit a series and confirm it appears when Series tab is selected.
-
+- [ ] Add fetchMovieById(id) to MovieContext (calls GET /movies/{id})
+- [ ] Expose it from useMovies()
+- [ ] Update Watch.tsx to refresh movie data when movie.id changes (so updated videoUrl/subtitles are used)
+- [ ] Update Admin.tsx to show a visible “Saved!” and ensure list row uses refreshed movie data (optional)
+- [ ] Run typecheck/build (npm test/build)

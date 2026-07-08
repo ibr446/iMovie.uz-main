@@ -4,6 +4,7 @@ import { ChevronLeft, Play, Pause, Volume2, Settings, Maximize2, Minimize2, Skip
 import { Movie } from '../../types';
 import { useTranslation } from '../context/LanguageContext';
 import { apiPost } from '../../api';
+import { useMovies } from '../context/MovieContext';
 import styles from "./Watch.module.css";
 import Hls from "hls.js"
 
