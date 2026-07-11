@@ -87,7 +87,11 @@ export const movies: Movie[] = [
     },
     poster: 'https://asilmedia.org/uploads/mini/fullstory/02/d688e647ff7ae6316551454cc9bfa0.webp',
     backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
+<<<<<<< HEAD
     videoUrl: 'https://Movie-uz.b-cdn.net/Tergovni%20qoylar%20olib%20boradi%202026%20720p%20(asilmedia.net).mp4',
+=======
+    videoUrl: 'https://Movie-uz.b-cdn.net/Tergovni%20qo'ylar%20olib%20boradi%202026%20720p%20(asilmedia.net).mp4',
+>>>>>>> 384b5fd7a3e76669b764da651b504908c3270d15
     year: 2026,
     genre: ['Comedy'],
     rating: 9,
