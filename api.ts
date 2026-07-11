@@ -5,7 +5,11 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? '/api' : `http://${window.location.hostname}:8000/api`);
+  (import.meta.env.PROD
+    ? // Vercel rewrites already route /api/* -> backend
+      '/api'
+    : `http://${window.location.hostname}:8000/api`);
+
 
 function getToken(): string | null {
   return localStorage.getItem('imovie-token');
