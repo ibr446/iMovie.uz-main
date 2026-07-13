@@ -49,4 +49,174 @@ export const movies: Movie[] = [
     isNew: true,
     views: 68,
   },
+  {
+    "id": "3bcc5e385028",
+    "title": {
+      "en": "Bloodhounds",
+      "ru": "охотничьи псы",
+      "uz": "Ovchi itla"
+    },
+    "description": {
+      "en": "Bloodhounds is a South Korean action-crime drama about two young boxers who get caught in a dangerous world of debt and loan sharks. They team up with a kind moneylender to fight against a ruthless criminal organization that exploits desperate people.",
+      "ru": "Bloodhounds — это южнокорейский экшн-криминальный сериал о двух молодых боксерах, которые оказываются втянутыми в опасный мир долгов и ростовщиков. Они объединяются с добрым кредитором, чтобы противостоять жестокой преступной организации, наживающейся на бедных людях.",
+      "uz": "Bloodhounds — bu Janubiy Koreya jangari-kriminal seriali bo‘lib, ikki yosh bokschi qarz va foizxo‘rlar dunyosiga tushib qoladi. Ular mehribon qarz beruvchi bilan birlashib, odamlarni ekspluatatsiya qiladigan shafqatsiz jinoyatchilarga qarshi kurashadi."
+    },
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCjWu7Q8L52Lu-S24tJ0bYKjapbHdZ_bN4OB3uyACpDA&s=10",
+    "backdrop": "",
+    "videoUrl": "",
+    "contentType": "series",
+    "episodes": [
+      {
+        "number": 1,
+        "title": "1-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 2,
+        "title": "2-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 3,
+        "title": "3-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 4,
+        "title": "4-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 5,
+        "title": "5-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 6,
+        "title": "6-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 7,
+        "title": "7-seriya",
+        "videoUrl": ""
+      },
+      {
+        "number": 8,
+        "title": "8-seriya",
+        "videoUrl": ""
+      }
+    ],
+    "audioUrls": {
+      "original": null,
+      "en": null,
+      "ru": null,
+      "uz": null
+    },
+    "subtitleUrls": {
+      "en": null,
+      "ru": null,
+      "uz": null
+    },
+    "year": 2023,
+    "genre": [
+      "Action"
+    ],
+    "rating": 9,
+    "duration": "58m",
+    "country": "South Korea",
+    "isTrending": false,
+    "isNew": true,
+    "views": 8
+  },
+  {
+    "id": "5b8ba5907925",
+    "title": {
+      "en": "true education",
+      "ru": "истинное образование",
+      "uz": "haqiqiy ta’lim"
+    },
+    "description": {
+      "en": "“True Education” is a Korean drama about a special education inspection team that steps into troubled schools where discipline has broken down and teachers are disrespected. The main character and his team use strict but effective methods to restore order and justice within the education system.",
+      "ru": "«Истинное образование» — это корейская дорама, рассказывающая о специальной группе инспекторов образования, которые вмешиваются в проблемные школы, где нарушена дисциплина и отсутствует уважение к учителям. Главный герой вместе со своей командой использует жёсткие, но эффективные методы, чтобы восстановить порядок и справедливость в системе образования.",
+      "uz": "“True Education” — bu muammoli maktablarga aralashadigan maxsus ta’lim inspektorlari guruhi haqida koreys doramasi. Bu maktablarda tartib buzilgan va o‘qituvchilarga hurmat yo‘qolgan. Bosh qahramon va uning jamoasi qat’iy, lekin samarali usullar orqali ta’lim tizimida tartib va adolatni tiklashga harakat qiladi."
+    },
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgWnKLYhd3eSSwI51pmtJnw48fWxD7G6WqfYOWlRqY3g&s=10",
+    "backdrop": "",
+    "videoUrl": "",
+    "contentType": "series",
+    "episodes": [
+      {
+        "number": 1,
+        "title": "1-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 2,
+        "title": "2-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 3,
+        "title": "3-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 4,
+        "title": "4-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 5,
+        "title": "5-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 6,
+        "title": "6-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 7,
+        "title": "7-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 8,
+        "title": "8-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 9,
+        "title": "9-seriya",
+        "videoUrl": "Avengers.mp4"
+      },
+      {
+        "number": 10,
+        "title": "10-seriya",
+        "videoUrl": "Avengers.mp4"
+      }
+    ],
+    "audioUrls": {
+      "original": null,
+      "en": null,
+      "ru": null,
+      "uz": null
+    },
+    "subtitleUrls": {
+      "en": null,
+      "ru": null,
+      "uz": null
+    },
+    "year": 2026,
+    "genre": [
+      "Action"
+    ],
+    "rating": 9,
+    "duration": "52m ",
+    "country": "South Korea",
+    "isTrending": true,
+    "isNew": true,
+    "views": 53
+  },
 ];
