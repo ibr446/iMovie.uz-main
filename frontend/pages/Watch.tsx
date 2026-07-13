@@ -382,12 +382,21 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [volume, isPlaying, showSettings, seekBy, resetControlsTimer, onBack]);
 
+
   // Fullscreen change listener
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
-  }, []);
+  const handler = () => {
+    const doc = document as any;
+    setIsFullscreen(!!(document.fullscreenElement || doc.webkitFullscreenElement));
+  };
+  document.addEventListener('fullscreenchange', handler);
+  document.addEventListener('webkitfullscreenchange', handler);
+  return () => {
+    document.removeEventListener('fullscreenchange', handler);
+    document.removeEventListener('webkitfullscreenchange', handler);
+  };
+}, []);
+
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -452,15 +461,29 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
     }
   };
 
+
   const toggleFullscreen = () => {
-    if (containerRef.current) {
-      if (!document.fullscreenElement) {
-        containerRef.current.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
+  const el = containerRef.current as any;
+  const doc = document as any;
+  const isFs = document.fullscreenElement || doc.webkitFullscreenElement;
+
+  if (!isFs) {
+    if (el?.requestFullscreen) {
+      el.requestFullscreen();
+    } else if (el?.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
+      // iOS Safari uchun fallback - faqat video elementda ishlaydi
+      (videoRef.current as any).webkitEnterFullscreen();
     }
-  };
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (doc.webkitExitFullscreen) {
+      doc.webkitExitFullscreen();
+    }
+  }
+};
 
   const handleSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
@@ -523,8 +546,12 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
       className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center overflow-hidden"
       onMouseMove={resetControlsTimer}
       onClick={(e) => {
-        if (showSettings) { setShowSettings(false); return; }
-        if ((e.target as HTMLElement).tagName === 'VIDEO') togglePlay();
+        if (showSettings) { setShowsettings(false); return; }
+        if ((e.target as HTMLElement).tagName === "VIDEO") {
+          togglePlay();
+          setShowContorols(false);
+          if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        }
       }}
     >
       <video 
