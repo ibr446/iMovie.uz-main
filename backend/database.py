@@ -28,11 +28,13 @@ if DATABASE_URL:
     # (Vercel environment’da pg8000 ko‘p hollarda o‘rnatilgan bo‘ladi yoki dependency qo‘shiladi.)
     logger.info(f"DATABASE_URL topildi, ulanish manzili: {DATABASE_URL.split('@')[-1]}")
 
-    # postgresql:// -> postgresql+pg8000://
+    # SQLAlchemy PostgreSQL driver'lari "channel_binding" kabi qo‘shimcha keyword uzatishi mumkin.
+    # Neon kabi provayderlarda TypeError kelmasligi uchun pool_pre_ping opsiyasini ham olib tashlaymiz.
     if DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    engine = create_engine(DATABASE_URL)
+
 else:
     # Vercel’da admin refreshdan keyin yo‘qolmasligi uchun SQLite ishlatishimiz kerak bo‘lsa,
     # kamida bir xil fayl yo‘li ishlatilishi zarur.
