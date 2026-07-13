@@ -1,30 +1,6 @@
 import { Movie } from '../types';
 
 export const movies: Movie[] = [
-  // {
-  //   id: 'avengers-local-2',
-  //   title: {
-  //     en: 'Avengers',
-  //     ru: 'Мстители',
-  //     uz: 'Qasoskorlar',
-  //   },
-  //   description: {
-  //     en: "Earth's mightiest heroes assemble to stop a dangerous enemy and protect the world from an alien invasion.",
-  //     ru: 'Величайшие герои Земли объединяются, чтобы остановить опасного врага и защитить мир от вторжения пришельцев.',
-  //     uz: "Yerning eng kuchli qahramonlari xavfli dushmanni to'xtatish va dunyoni begona mavjudotlar hujumidan himoya qilish uchun birlashadi.",
-  //   },
-  //   poster: '/photos/01-avengers-2012.webp',
-  //   backdrop: '/photos/maxresdefault.jpg',
-  //   videoUrl: 'Avengers.mp4',
-  //   year: 2012,
-  //   genre: ['Action', 'Adventure'],
-  //   rating: 8,
-  //   duration: '2h 23m',
-  //   country: 'USA',
-  //   isTrending: true,
-  //   isNew: false,
-  //   views: 0,
-  // },
   {
     id: '282b83943421',
     title: {
@@ -73,32 +49,4 @@ export const movies: Movie[] = [
     isNew: true,
     views: 68,
   },
-  {
-    id: '27bty5aa6012',
-    title: {
-      en: 'The Sheep Lead the Investigation',
-      ru: 'Расследование ведут овцы',
-      uz: 'Tergovni qo‘ylar olib boradi',
-    },
-    description: {
-      en: 'This is a unique and engaging story where ordinary sheep unexpectedly take on the investigation of a complex crime. Using their intelligence and teamwork, they uncover mysterious events. The story blends humor with detective elements.',
-      ru: 'Это необычная и увлекательная история, в которой обычные овцы неожиданно берутся за расследование сложного преступления. Благодаря своему уму и командной работе они раскрывают загадочные события. Произведение сочетает в себе элементы юмора и детектива.',
-      uz: "Bu hikoya noodatiy va qiziqarli syujetga ega bo‘lib, unda oddiy qo‘ylar kutilmaganda murakkab jinoyatni tergov qilishga kirishadi. Ular o‘z aql-zakovati va jamoaviy harakatlari bilan sirli voqealarni ochib beradi. Asar hazil va detektiv janrlarini o‘zida mujassam etadi.",
-    },
-    poster: 'https://asilmedia.org/uploads/mini/fullstory/02/d688e647ff7ae6316551454cc9bfa0.webp',
-    backdrop: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&q=80',
-<<<<<<< HEAD
-    videoUrl: 'https://Movie-uz.b-cdn.net/Tergovni%20qoylar%20olib%20boradi%202026%20720p%20(asilmedia.net).mp4',
-=======
-    videoUrl: 'https://Movie-uz.b-cdn.net/Tergovni%20qo'ylar%20olib%20boradi%202026%20720p%20(asilmedia.net).mp4',
->>>>>>> 384b5fd7a3e76669b764da651b504908c3270d15
-    year: 2026,
-    genre: ['Comedy'],
-    rating: 9,
-    duration: '1h 42 m',
-    country: 'Kazakhstan',
-    isTrending: true,
-    isNew: true,
-    views: 68,
-  }
 ];

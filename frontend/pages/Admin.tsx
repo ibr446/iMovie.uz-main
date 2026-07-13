@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Eye, TrendingUp, Users, Film, X, Save } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
@@ -42,7 +41,7 @@ const AdminPanel: React.FC = () => {
 
   const [newMovie, setNewMovie] = useState<Partial<Movie>>(createEmptyMovieForm);
 
-const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbackVideoUrl = newMovie.videoUrl || '') => (
+const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbackVideoUrl = '') => (
     Array.from({ length: Math.max(1, count) }, (_, index) => {
       const number = index + 1;
       const existing = current.find(episode => episode.number === number) || current[index];
@@ -58,7 +57,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
     setNewMovie(prev => ({
       ...prev,
       contentType: 'series',
-      episodes: buildEpisodes(count, prev.episodes || [], prev.videoUrl || ''),
+      episodes: buildEpisodes(count, prev.episodes || [], ''),
     }));
   };
 
@@ -66,7 +65,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
   const updateEpisode = (number: number, field: 'title' | 'videoUrl', value: string) => {
     setNewMovie(prev => ({
       ...prev,
-      episodes: buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], prev.videoUrl || '').map(episode => (
+      episodes: buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], '').map(episode => (
         episode.number === number ? { ...episode, [field]: value } : episode
       )),
     }));
@@ -122,7 +121,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
     try {
       const contentType = newMovie.contentType === 'series' ? 'series' : 'movie';
       const episodes = contentType === 'series'
-        ? buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], newMovie.videoUrl || '')
+        ? buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], '')
         : [];
 
       console.log('FINAL DATA:', {
@@ -138,7 +137,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
         description: newMovie.description!,
         poster: newMovie.poster || '',
         backdrop: newMovie.backdrop || '',
-        videoUrl: newMovie.videoUrl || '',
+        videoUrl: contentType === 'series' ? '' : (newMovie.videoUrl || ''),
         // contentType,
         // episodes,
         year: newMovie.year || new Date().getFullYear(),
@@ -372,7 +371,7 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Content type</label>
                   <select
@@ -383,7 +382,8 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
                       setNewMovie(prev => ({
                         ...prev,
                         contentType,
-                        episodes: contentType === 'series' ? buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], prev.videoUrl || '') : [],
+                        videoUrl: contentType === 'series' ? '' : prev.videoUrl,
+                        episodes: contentType === 'series' ? buildEpisodes(prev.episodes?.length || 1, prev.episodes || [], '') : [],
                       }));
                     }}
                   >
@@ -392,37 +392,29 @@ const buildEpisodes = (count: number, current = newMovie.episodes || [], fallbac
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Episode count</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    disabled={(newMovie.contentType || 'movie') !== 'series'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-40"
-                    value={(newMovie.contentType || 'movie') === 'series' ? (newMovie.episodes?.length || 1) : 1}
-                    onChange={e => setEpisodeCount(parseInt(e.target.value) || 1)}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-1">
-                  <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Main video URL</label>
-                  <input
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                    placeholder="Avengers.mp4 yoki https://example.com/movie.mp4"
-                    value={newMovie.videoUrl}
-onChange={e => {
-                       const videoUrl = e.target.value;
-                       setNewMovie(prev => ({
-                         ...prev,
-                         videoUrl,
-                         episodes: prev.contentType === 'series' && prev.episodes?.length
-                           ? prev.episodes.map(episode => !episode.videoUrl ? { ...episode, videoUrl } : episode)
-                           : prev.episodes,
-                       }));
-                     }}
-                  />
-                </div>
+                {(newMovie.contentType || 'movie') === 'series' ? (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Episode count</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      value={newMovie.episodes?.length || 1}
+                      onChange={e => setEpisodeCount(parseInt(e.target.value) || 1)}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Main video URL</label>
+                    <input
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      placeholder="Avengers.mp4 yoki https://example.com/movie.mp4"
+                      value={newMovie.videoUrl}
+                      onChange={e => setNewMovie({ ...newMovie, videoUrl: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
 
               {(newMovie.contentType || 'movie') === 'series' && (
@@ -432,7 +424,7 @@ onChange={e => {
                     <span className="text-xs font-bold text-zinc-500">{newMovie.episodes?.length || 1} total</span>
                   </div>
                   <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
-                    {buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], newMovie.videoUrl || '').map(episode => (
+                    {buildEpisodes(newMovie.episodes?.length || 1, newMovie.episodes || [], '').map(episode => (
                       <div key={episode.number} className="grid grid-cols-1 gap-2 rounded-xl border border-white/5 bg-black/20 p-3 md:grid-cols-[92px_1fr_1.6fr]">
                         <div className="flex items-center rounded-lg bg-white/5 px-3 text-xs font-black text-white">
                           {episode.number}-seriya

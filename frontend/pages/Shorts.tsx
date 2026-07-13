@@ -143,27 +143,28 @@ const getVideoToken = (url: string) => {
   return normalizeSearchText(fileName.replace(/\.[^.]+$/, ''));
 };
 
+
+
 const findRelatedMovie = (short: ShortItem, movies: Movie[]) => {
   if (short.movieId) {
     const exactMovie = movies.find((movie) => String(movie.id) === String(short.movieId));
-    if(exactMovie) return exactMovie;
+    if (exactMovie) return exactMovie;
   }
 
   const shortVideoToken = getVideoToken(short.videoUrl);
-  const videoMatch = movies.find((movie) => getVideoToken(movie.videoUrl) === shortVideoToken);
-  if (videoMatch) return videoMatch;
+  if (shortVideoToken) {
+    const videoMatch = movies.find((movie) => getVideoToken(movie.videoUrl) === shortVideoToken);
+    if (videoMatch) return videoMatch;
+  }
 
-  const shortText = normalizeSearchText([short.caption, short.audio, short.name, short.videoUrl].join(' '));
-  const titleMatch = movies.find((movie) => (
-    Object.values(movie.title).some((title) => {
-      const titleToken = normalizeSearchText(title);
-      short.caption.toLowerCase().includes(title.toLowerCase());
-    })
-  ));
+  const titleMatch = movies.find((movie) =>
+    Object.values(movie.title).some((title) =>
+      title && short.caption.toLowerCase().includes(title.toLowerCase())
+    )
+  );
+  if (titleMatch) return titleMatch;
 
-  if(titleMatch) return titleMatch;
-
-  return movies.length > 0 ? movies[0] : n
+  return undefined; // ✅ mos kelmasa hech narsa qaytarmaydi
 };
   
 

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, or_, text
 
-from ..database import engine, get_db
+from database import engine, get_db
 from models import Movie, User
 from schemas import MovieCreate, MovieUpdate, MovieResponse, MovieTitle, MovieDescription
 from auth import get_current_user, require_admin
