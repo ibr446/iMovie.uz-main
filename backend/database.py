@@ -23,20 +23,21 @@ if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     logger.info(f"DATABASE_URL topildi, ulanish manzili: {DATABASE_URL.split('@')[-1]}")
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        connect_args={},
+    )
 else:
-    if IS_SERVERLESS:
-        # Vercel'da fayl yozib bo'lmaydi — SQLite fallback qilib xatoni
-        # keyinga surish o'rniga, aniq va tushunarli xato beramiz.
-        raise RuntimeError(
-            "DATABASE_URL topilmadi! Vercel'da PostgreSQL ulanishi shart "
-            "(Settings -> Environment Variables -> DATABASE_URL). "
-            "SQLite Vercel serverless muhitida ishlamaydi."
-        )
-    # Faqat lokal (kompyuteringizda) ishlaganda SQLite'ga tushamiz
+    # Vercel’da admin refreshdan keyin yo‘qolmasligi uchun SQLite ishlatishimiz kerak bo‘lsa,
+    # kamida bir xil fayl yo‘li ishlatilishi zarur.
+    # (Agar Vercelda persistent volume bo‘lmasa, baribir yo‘qolishi mumkin.)
     DB_PATH = os.path.join(BASE_DIR, "imovie.db")
     DATABASE_URL = f"sqlite:///{DB_PATH}"
-    logger.info("DATABASE_URL topilmadi, lokal SQLite ishlatiladi")
+    logger.warning(
+        "DATABASE_URL topilmadi. SQLite ishlatiladi. "
+        "Agar Vercel serverless ephemeral bo‘lsa, refresh/deployda ma’lumot yo‘qolishi mumkin."
+    )
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
