@@ -10,6 +10,8 @@ const API_BASE_URL =
       '/api'
     : `http://${window.location.hostname}:8000/api`);
 
+const PROD_REQUEST_TIMEOUT_MS = 15000;
+
 
 function getToken(): string | null {
   return localStorage.getItem('imovie-token');
@@ -40,12 +42,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      ...authHeaders(),
-    },
-  });
-  return handleResponse<T>(response);
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), PROD_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: {
+        ...authHeaders(),
+      },
+      signal: controller.signal,
+    });
+    return handleResponse<T>(response);
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {

@@ -45,16 +45,23 @@ const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         callback: async (response) => {
           if (!response.credential) {
             setError('Google login failed.');
+            setLoading(false);
             return;
           }
-          setLoading(true);
-          setError('');
-          const result = await googleLogin(response.credential);
-          setLoading(false);
-          if (result.ok) {
-            onSuccess();
-          } else {
-            setError(result.error || 'Google login failed.');
+          try {
+            setLoading(true);
+            setError('');
+            const result = await googleLogin(response.credential);
+            setLoading(false);
+
+            if (result.ok) {
+              onSuccess();
+            } else {
+              setError(result.error || 'Google login failed.');
+            }
+          } catch (e) {
+            setLoading(false);
+            setError('Network error');
           }
         },
       });
