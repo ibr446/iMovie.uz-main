@@ -22,12 +22,17 @@ if DATABASE_URL:
     # Ba'zi provayderlar "postgres://" beradi, SQLAlchemy 2.x buni yoqtirmaydi
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    # Neon/ko‘plab provayderlarda async driver yoki psycopg2 talab qilinmasligi mumkin.
+    # SQLAlchemy PostgreSQL backend uchun psycopg2 ishlatadi; uni o‘rnatilmagan bo‘lsa import xato beradi.
+    # Shuning uchun DATABASE_URL ni "psycopg2" o‘rniga "pg8000" bilan ishlatishga moslaymiz.
+    # (Vercel environment’da pg8000 ko‘p hollarda o‘rnatilgan bo‘ladi yoki dependency qo‘shiladi.)
     logger.info(f"DATABASE_URL topildi, ulanish manzili: {DATABASE_URL.split('@')[-1]}")
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,
-        connect_args={},
-    )
+
+    # postgresql:// -> postgresql+pg8000://
+    if DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 else:
     # Vercel’da admin refreshdan keyin yo‘qolmasligi uchun SQLite ishlatishimiz kerak bo‘lsa,
     # kamida bir xil fayl yo‘li ishlatilishi zarur.
