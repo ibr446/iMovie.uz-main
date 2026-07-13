@@ -697,15 +697,21 @@ def ensure_true_education_episodes():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: create tables and seed data on startup."""
-    # Create all database tables
     Base.metadata.create_all(bind=engine)
     ensure_movie_episode_columns()
     ensure_short_video_movie_id_column()
-    # Seed initial data
-    seed_database()
-    sync_deployed_content()
-    ensure_true_education_episodes()
-    seed_shorts()
+
+    # Production’da DB persistent bo‘lsa ham, har deploy/start’da catalogni overwrite qilmaslik kerak.
+    # Shuning uchun seed/sync faqat env flag yoqilganda ishlaydi.
+    do_seed = os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
+    if do_seed:
+        seed_database()
+        sync_deployed_content()
+        ensure_true_education_episodes()
+        seed_shorts()
+    else:
+        # episodes/content_type moslashuvlari admin qo‘shgan kontentni buzmasligi uchun run qilinadi.
+        ensure_true_education_episodes()
     print("iMovie.uz Backend is running!")
     print("API Docs: http://localhost:8000/docs")
     yield
@@ -814,6 +820,7 @@ if os.path.exists(SHORTS_DIR_ABS):
 # ── Root endpoint ─────────────────────────────────────────────────
 @app.get("/")
 def root():
+
     index_path = os.path.join(DIST_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
