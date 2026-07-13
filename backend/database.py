@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Vercel/Neon integratsiyasi turli nomlar bilan URL berishi mumkin —
 # hammasini tekshiramiz, birinchi topilganini ishlatamiz.
 DATABASE_URL = (
-    os.getenv("DATABASE_URL")
+    os.environ.get("DATABASE_POSTGRES_URL")
     or os.getenv("POSTGRES_URL")
     or os.getenv("POSTGRES_PRISMA_URL")
     or os.getenv("DATABASE_URL_UNPOOLED")
