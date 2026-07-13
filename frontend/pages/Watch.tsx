@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, Play, Pause, Volume2, Settings, Maximize2, Minimize2, SkipForward, SkipBack, VolumeX, X, Subtitles, Gauge } from 'lucide-react';
 import { Movie } from '../../types';
@@ -23,29 +22,6 @@ function generateSubs(lines: string[], cycleSec = 4): Array<{ start: number; end
   }
   return result;
 }
-
-
-
-// const mockSubtitles: Record<string, Array<{ start: number; end: number; text: string }>> = {
-//   en: generateSubs([
-//     "Welcome to iMovie.uz", "Enjoy the show!", "The adventure begins now...",
-//     "An exciting journey unfolds", "Stay tuned for more!", "Premium streaming experience",
-//     "Thank you for watching", "The story continues...", "Action and drama ahead",
-//     "A world of cinema awaits",
-//   ]),
-//   ru: generateSubs([
-//     "Добро пожаловать на iMovie.uz", "Приятного просмотра!", "Приключение начинается...",
-//     "Увлекательное путешествие", "Оставайтесь с нами!", "Премиум качество",
-//     "Спасибо за просмотр", "История продолжается...", "Экшн и драма впереди",
-//     "Мир кино ждёт вас",
-//   ]),
-//   uz: generateSubs([
-//     "iMovie.uz ga xush kelibsiz", "Yoqimli tomosha!", "Sarguzasht boshlanadi...",
-//     "Qiziqarli sayohat davom etadi", "Bizda qoling!", "Premium sifat",
-//     "Tomosha qilganingiz uchun rahmat", "Hikoya davom etadi...", "Harakat va drama oldinda",
-//     "Kino olami sizni kutmoqda",
-//   ]),
-// };
 
 const qualityOptions = [
   { label: '4K Ultra HD', value: '2160p', badge: '4K' },
@@ -85,27 +61,32 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
-   // Settings
+
+  // Settings
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'main' | 'quality' | 'speed' | 'subtitle'>('main');
   const [selectedQuality, setSelectedQuality] = useState('auto');
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [selectedAudioLang, setSelectedAudioLang] = useState('original');
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(initialEpisodeNumber || episodeOptions[0]?.number || 1);
-  
-   // Subtitles
+
+  // Subtitles
   const [subtitleLang, setSubtitleLang] = useState<string | null>(null);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const [availableSubLangs, setAvailableSubLangs] = useState<string[]>([]);
-  
+
   // Buffering
   const [buffered, setBuffered] = useState(0);
   const [videoError, setVideoError] = useState('');
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimerRef = useRef<number | null>(null);
+  // Video ustiga bosilganda controlsni DARHOL yashirish uchun flag.
+  // togglePlay() -> isPlaying o'zgaradi -> useEffect resetControlsTimer()ni chaqiradi,
+  // shu effekt "auto-show"ni bir marta o'tkazib yuborishi uchun ishlatiladi.
+  const skipNextAutoShowRef = useRef(false);
+
   const backendOrigin = useMemo(() => (
     import.meta.env.PROD ? '' : `http://${window.location.hostname}:8000`
   ), []);
@@ -188,7 +169,12 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
 
   // Hide controls after inactivity
   const resetControlsTimer = useCallback(() => {
-    setShowControls(true);
+    if (skipNextAutoShowRef.current) {
+      // Video ustiga bosilganda ataylab yashirilgan controlsni qayta ko'rsatmaymiz
+      skipNextAutoShowRef.current = false;
+    } else {
+      setShowControls(true);
+    }
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = window.setTimeout(() => {
       if (isPlaying) setShowControls(false);
@@ -382,21 +368,19 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [volume, isPlaying, showSettings, seekBy, resetControlsTimer, onBack]);
 
-
-  // Fullscreen change listener
+  // Fullscreen change listener (Safari/webkit uchun ham)
   useEffect(() => {
-  const handler = () => {
-    const doc = document as any;
-    setIsFullscreen(!!(document.fullscreenElement || doc.webkitFullscreenElement));
-  };
-  document.addEventListener('fullscreenchange', handler);
-  document.addEventListener('webkitfullscreenchange', handler);
-  return () => {
-    document.removeEventListener('fullscreenchange', handler);
-    document.removeEventListener('webkitfullscreenchange', handler);
-  };
-}, []);
-
+    const handler = () => {
+      const doc = document as any;
+      setIsFullscreen(!!(document.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handler);
+    document.addEventListener('webkitfullscreenchange', handler);
+    return () => {
+      document.removeEventListener('fullscreenchange', handler);
+      document.removeEventListener('webkitfullscreenchange', handler);
+    };
+  }, []);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -461,29 +445,28 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
     }
   };
 
-
   const toggleFullscreen = () => {
-  const el = containerRef.current as any;
-  const doc = document as any;
-  const isFs = document.fullscreenElement || doc.webkitFullscreenElement;
+    const el = containerRef.current as any;
+    const doc = document as any;
+    const isFs = document.fullscreenElement || doc.webkitFullscreenElement;
 
-  if (!isFs) {
-    if (el?.requestFullscreen) {
-      el.requestFullscreen();
-    } else if (el?.webkitRequestFullscreen) {
-      el.webkitRequestFullscreen();
-    } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
-      // iOS Safari uchun fallback - faqat video elementda ishlaydi
-      (videoRef.current as any).webkitEnterFullscreen();
+    if (!isFs) {
+      if (el?.requestFullscreen) {
+        el.requestFullscreen();
+      } else if (el?.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
+        // iOS Safari uchun fallback - faqat video elementda ishlaydi
+        (videoRef.current as any).webkitEnterFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      }
     }
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (doc.webkitExitFullscreen) {
-      doc.webkitExitFullscreen();
-    }
-  }
-};
+  };
 
   const handleSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
@@ -546,11 +529,13 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
       className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center overflow-hidden"
       onMouseMove={resetControlsTimer}
       onClick={(e) => {
-        if (showSettings) { setShowsettings(false); return; }
-        if ((e.target as HTMLElement).tagName === "VIDEO") {
+        if (showSettings) { setShowSettings(false); return; }
+        if ((e.target as HTMLElement).tagName === 'VIDEO') {
+          // Video ustiga bosilganda: play/pause + hamma UI darhol yashirinsin
+          skipNextAutoShowRef.current = true;
           togglePlay();
-          setShowContorols(false);
           if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+          setShowControls(false);
         }
       }}
     >
@@ -661,19 +646,6 @@ const Watch: React.FC<WatchProps> = ({ movie, initialEpisodeNumber, onBack }) =>
             </label>
           </div>
           </div>
-
-
-          
-          {/* <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-lg">
-              {getQualityLabel()}
-            </span>
-            {subtitleLang && (
-              <span className="text-[10px] font-black bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20 uppercase tracking-widest">
-                CC: {subtitleLang.toUpperCase()}
-              </span>
-            )}
-          </div> */}
         </div>
 
         {/* Center Play/Pause Button */}
