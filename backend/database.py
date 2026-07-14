@@ -51,14 +51,19 @@ if DATABASE_URL:
     engine = create_engine(DATABASE_URL, connect_args={"ssl_context": ssl_context})
 
 else:
-    # Vercel’da admin refreshdan keyin yo‘qolmasligi uchun SQLite ishlatishimiz kerak bo‘lsa,
-    # kamida bir xil fayl yo‘li ishlatilishi zarur.
-    # (Agar Vercelda persistent volume bo‘lmasa, baribir yo‘qolishi mumkin.)
-    DB_PATH = os.path.join(BASE_DIR, "imovie.db")
+    # Vercel’da SQLite uchun fayl yoziladigan yo‘l kerak.
+    # Serverless odatda loyihani o‘qiydi, lekin backend papkaga yozish ruxsat/yo‘l bo‘lmasligi mumkin.
+    # Shuning uchun Vercel bo‘lsa /tmp ga joylaymiz.
+    # (Ephemeral bo‘lsa, deploy/refreshda baribir yo‘qolishi mumkin, lekin app start paytidagi error yo‘qoladi.)
+    if os.getenv("VERCEL"):
+        DB_PATH = "/tmp/imovie.db"
+    else:
+        DB_PATH = os.path.join(BASE_DIR, "imovie.db")
+
     DATABASE_URL = f"sqlite:///{DB_PATH}"
     logger.warning(
         "DATABASE_URL topilmadi. SQLite ishlatiladi. "
-        "Agar Vercel serverless ephemeral bo‘lsa, refresh/deployda ma’lumot yo‘qolishi mumkin."
+        f"DB_PATH={DB_PATH}."
     )
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
