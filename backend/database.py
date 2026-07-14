@@ -33,6 +33,16 @@ if DATABASE_URL:
     if DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
+    # pg8000 "channel_binding" parametrini tushunmaydi — uni URL'dan olib tashlaymiz
+    from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+
+    parts = urlsplit(DATABASE_URL)
+    query_params = [(k, v) for k, v in parse_qsl(parts.query) if k != "channel_binding"]
+    DATABASE_URL = urlunsplit((
+        parts.scheme, parts.netloc, parts.path,
+        urlencode(query_params), parts.fragment
+    ))
+
     engine = create_engine(DATABASE_URL)
 
 else:
