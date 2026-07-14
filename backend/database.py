@@ -34,16 +34,21 @@ if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
     # pg8000 "channel_binding" parametrini tushunmaydi — uni URL'dan olib tashlaymiz
+    import ssl
     from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
     parts = urlsplit(DATABASE_URL)
-    query_params = [(k, v) for k, v in parse_qsl(parts.query) if k != "channel_binding"]
+    query_params = [
+        (k, v) for k, v in parse_qsl(parts.query)
+        if k not in ("channel_binding", "sslmode")
+    ]
     DATABASE_URL = urlunsplit((
         parts.scheme, parts.netloc, parts.path,
         urlencode(query_params), parts.fragment
     ))
 
-    engine = create_engine(DATABASE_URL)
+    ssl_context = ssl.create_default_context()
+    engine = create_engine(DATABASE_URL, connect_args={"ssl_context": ssl_context})
 
 else:
     # Vercel’da admin refreshdan keyin yo‘qolmasligi uchun SQLite ishlatishimiz kerak bo‘lsa,
