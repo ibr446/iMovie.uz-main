@@ -177,6 +177,12 @@ def seed_database():
     db = SessionLocal()
     try:
         print("🌱 Seeding/Upserting database...")
+        # debug: check existing users
+        try:
+            users_count = db.query(User).count()
+            print(f"[seed_database] users currently: {users_count}")
+        except Exception as _e:
+            print(f"[seed_database] could not count users: {_e}")
 
         # Upsert admin user
         admin = db.query(User).filter(User.id == "admin-1").first()
@@ -701,11 +707,17 @@ async def lifespan(app: FastAPI):
     ensure_movie_episode_columns()
     ensure_short_video_movie_id_column()
 
-    # Production’da DB persistent bo‘lsa ham, har deploy/start’da catalogni overwrite qilmaslik kerak.
-    # Shuning uchun seed/sync faqat env flag yoqilganda ishlaydi.
-    do_seed = os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
+    # Vercel serverless muhitida DB fayl (/tmp) vaqtinchalik bo‘lishi mumkin.
+    # Shuning uchun Vercel’da seed har startda ishlashi kerak.
+    # Lokal/dev uchun esa shartli qoldiramiz.
+    do_seed = bool(os.getenv("VERCEL")) or (
+        os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
+    )
+    print(f"VERCEL={os.getenv('VERCEL')} SEED_ON_STARTUP={os.getenv('SEED_ON_STARTUP')} do_seed={do_seed}")
+
     if do_seed:
         seed_database()
+        # seed/update demo catalog
         sync_deployed_content()
         ensure_true_education_episodes()
         seed_shorts()

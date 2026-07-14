@@ -36,3 +36,6 @@ public/shorts/*.mp4
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
+.env*
