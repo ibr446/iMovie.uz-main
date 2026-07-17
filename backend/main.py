@@ -710,6 +710,14 @@ async def lifespan(app: FastAPI):
     # Vercel serverless muhitida DB fayl (/tmp) vaqtinchalik bo‘lishi mumkin.
     # Shuning uchun Vercel’da seed har startda ishlashi kerak.
     # Lokal/dev uchun esa shartli qoldiramiz.
+    def is_db_empty() -> bool:
+        db = SessionLocal()
+        try:
+            return db.query(Movie).count() == 0
+        except Exception:
+            return True
+        finally:
+            db.close()
     do_seed = bool(os.getenv("VERCEL")) or (
         os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
     )
