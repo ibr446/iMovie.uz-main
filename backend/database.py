@@ -13,6 +13,8 @@ DATABASE_URL = (
     os.environ.get("DATABASE_POSTGRES_URL")
     or os.getenv("POSTGRES_URL")
     or os.getenv("POSTGRES_PRISMA_URL")
+    or os.getenv("POSTGRES_DATABASE_URL")          # ← yangi qo'shildi
+    or os.getenv("POSTGRES_DATABASE_URL_UNPOOLED")  # ← yangi qo'shildi
     or os.getenv("DATABASE_URL_UNPOOLED")
 )
 
