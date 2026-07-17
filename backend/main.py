@@ -467,7 +467,8 @@ def seed_shorts():
         changed = False
         for short_id, video_url in local_video_urls.items():
             short = existing_by_id.get(short_id) or db.query(ShortVideo).filter(ShortVideo.id == short_id).first()
-            if short and resolve_short_path(video_url):
+
+            if short:
                 if short.video_url != video_url:
                     short.video_url = video_url
                     changed = True
@@ -475,8 +476,7 @@ def seed_shorts():
                 if movie_id and short.movie_id != movie_id:
                     short.movie_id = movie_id
                     changed = True
-
-            if not short and resolve_short_path(video_url):
+            else:
                 movie_id = related_movie_ids.get(short_id)
                 db.add(
                     ShortVideo(
