@@ -449,14 +449,14 @@ def seed_shorts():
 
         # Legacy/deploy seed mapping (agar fayl nomi mos kelsa)
         local_video_urls = {
-            "short-1": "Movie.mp4",
-            "short-2": "football.mp4",
-            "short-3": "videoplayback (1).mp4",
+            "short-1": "https://imovie-uz.b-cdn.net/Movie.mp4",
+            "short-2": "https://imovie-uz.b-cdn.net/videoplayback.mp4",
+            "short-3": "https://imovie-uz.b-cdn.net/Bloodhounds.mp4",
         }
         related_movie_ids = {
-            "short-1": "282b83943421",
-            "short-2": "27bdd5ff1829",
-            "short-3": "avengers-local-2",
+            "short-1": "5b8ba5907925",
+            "short-2": "e4f34bd479f3",
+            "short-3": "e4f34bd479f3",
         }
 
         # Agar DBda shorts bo'lsa, shunchaki video_url mapping va qo'shimcha fayllarni qo'shib qo'yamiz.
