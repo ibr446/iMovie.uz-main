@@ -708,31 +708,37 @@ async def lifespan(app: FastAPI):
     ensure_short_video_movie_id_column()
 
     # Vercel serverless muhitida DB fayl (/tmp) vaqtinchalik bo‘lishi mumkin.
-    # Shuning uchun Vercel’da seed har startda ishlashi kerak.
-    # Lokal/dev uchun esa shartli qoldiramiz.
+    # Lekin admin qo‘shgan kontent yo‘qolmasligi uchun seed/sync faqat DB bo‘sh bo‘lganda ishlasin.
     def is_db_empty() -> bool:
         db = SessionLocal()
         try:
             return db.query(Movie).count() == 0
         except Exception:
+            # DB so‘rovi xato bo‘lsa ham, xavfsizlik uchun seed yoqamiz
             return True
         finally:
             db.close()
-    do_seed = bool(os.getenv("VERCEL")) or (
-        os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
+
+    allow_seed_env = os.getenv("SEED_ON_STARTUP", "false").lower() in {"1", "true", "yes"}
+    db_empty = is_db_empty()
+    do_seed = db_empty or allow_seed_env
+    print(
+        f"VERCEL={os.getenv('VERCEL')} SEED_ON_STARTUP={os.getenv('SEED_ON_STARTUP')} is_db_empty={db_empty} do_seed={do_seed}"
     )
-    print(f"VERCEL={os.getenv('VERCEL')} SEED_ON_STARTUP={os.getenv('SEED_ON_STARTUP')} do_seed={do_seed}")
+
 
     if do_seed:
         seed_database()
-        # seed/update demo catalog
+        # seed/update demo catalog (faqat birinchi marta)
         sync_deployed_content()
         ensure_true_education_episodes()
         seed_shorts()
     else:
         # episodes/content_type moslashuvlari admin qo‘shgan kontentni buzmasligi uchun run qilinadi.
         ensure_true_education_episodes()
+
     print("iMovie.uz Backend is running!")
+
     print("API Docs: http://localhost:8000/docs")
     yield
     print("Shutting down...")
