@@ -435,6 +435,19 @@ def seed_database():
 def seed_shorts():
     db = SessionLocal()
     try:
+        # Shorts papkadan fayllarni ko'rib, DB ga upsert qilish
+        # Maqsad: Vercel refresh/deployda yangi shorts yo'qolib qolmasin.
+        local_video_files: list[str] = []
+        if os.path.isdir(SHORTS_DIR_ABS):
+            for entry in os.listdir(SHORTS_DIR_ABS):
+                ext = os.path.splitext(entry.lower())[1]
+                if ext in VIDEO_EXTENSIONS:
+                    local_video_files.append(entry)
+
+        # Stable tartib: filename bo'yicha sort
+        local_video_files = sorted(local_video_files)
+
+        # Legacy/deploy seed mapping (agar fayl nomi mos kelsa)
         local_video_urls = {
             "short-1": "Movie.mp4",
             "short-2": "football.mp4",
@@ -446,83 +459,110 @@ def seed_shorts():
             "short-3": "avengers-local-2",
         }
 
-        if db.query(ShortVideo).count() > 0:
-            changed = False
-            for short_id, video_url in local_video_urls.items():
-                short = db.query(ShortVideo).filter(ShortVideo.id == short_id).first()
-                if short and resolve_short_path(video_url) and short.video_url != video_url:
+        # Agar DBda shorts bo'lsa, shunchaki video_url mapping va qo'shimcha fayllarni qo'shib qo'yamiz.
+        existing_shorts = db.query(ShortVideo).all()
+        existing_by_id = {s.id: s for s in existing_shorts}
+
+        # 1) Legacy 3 ta short (agar mos fayllar bo'lsa)
+        changed = False
+        for short_id, video_url in local_video_urls.items():
+            short = existing_by_id.get(short_id) or db.query(ShortVideo).filter(ShortVideo.id == short_id).first()
+            if short and resolve_short_path(video_url):
+                if short.video_url != video_url:
                     short.video_url = video_url
                     changed = True
                 movie_id = related_movie_ids.get(short_id)
-                if short and movie_id and short.movie_id != movie_id:
+                if movie_id and short.movie_id != movie_id:
                     short.movie_id = movie_id
                     changed = True
-            if changed:
-                db.commit()
-                print("Updated seeded shorts to local video files")
-            return
 
-        shorts_data = [
-            ShortVideo(
-                id="short-1",
-                user_id="admin-1",
-                movie_id=related_movie_ids["short-1"],
-                author="@imovie_official",
-                name="iMovie.uz",
-                avatar="https://picsum.photos/seed/imovie-official/96/96",
-                video_url="Movie.mp4",
-                caption="The Cosmic Horizon sahnasidan maxsus lavha. Katta ekranga tayyormisiz?",
-                audio="iMovie.uz Original Sound",
-                location="Tashkent",
-                tags=["cinema", "behindthescenes", "uzbekistan"],
-                likes=0,
-                shares=842,
-                views=118000,
-            ),
-            ShortVideo(
-                id="short-2",
-                user_id="admin-1",
-                movie_id=related_movie_ids["short-2"],
-                author="@cine_lover",
-                name="Cine Lover",
-                avatar="https://picsum.photos/seed/cine-lover/96/96",
-                video_url="football.mp4",
-                caption="Aktyorlar kulgudan sahnani tugata olmagan payt. Bu kadrni ko'ring!",
-                audio="Comedy Club Tashkent - Bloopers",
-                location="Samarkand",
-                tags=["bloopers", "comedy", "shorts"],
-                likes=0,
-                shares=2100,
-                views=540000,
-            ),
-            ShortVideo(
-                id="short-3",
-                user_id="admin-1",
-                movie_id=related_movie_ids["short-3"],
-                author="@moviecuts",
-                name="Movie Cuts",
-                avatar="https://picsum.photos/seed/movie-cuts/96/96",
-                video_url="videoplayback (1).mp4",
-                caption="Eng kuchli trailer momentlari bir joyda. Saqlab qo'ying.",
-                audio="Epic Trailer Mix",
-                location="Bukhara",
-                tags=["trailer", "action", "movie"],
-                likes=0,
-                shares=1600,
-                views=276000,
-            ),
-        ]
+            if not short and resolve_short_path(video_url):
+                movie_id = related_movie_ids.get(short_id)
+                db.add(
+                    ShortVideo(
+                        id=short_id,
+                        user_id="admin-1",
+                        movie_id=movie_id,
+                        author={
+                            "short-1": "@imovie_official",
+                            "short-2": "@cine_lover",
+                            "short-3": "@moviecuts",
+                        }.get(short_id, "@imovie_official"),
+                        name={
+                            "short-1": "iMovie.uz",
+                            "short-2": "Cine Lover",
+                            "short-3": "Movie Cuts",
+                        }.get(short_id, "iMovie.uz"),
+                        avatar={
+                            "short-1": "https://picsum.photos/seed/imovie-official/96/96",
+                            "short-2": "https://picsum.photos/seed/cine-lover/96/96",
+                            "short-3": "https://picsum.photos/seed/movie-cuts/96/96",
+                        }.get(short_id, "https://picsum.photos/seed/imovie-official/96/96"),
+                        video_url=video_url,
+                        caption="",
+                        audio="",
+                        location="",
+                        tags=[],
+                        likes=0,
+                        shares=0,
+                        views=0,
+                    )
+                )
+                changed = True
 
-        for short in shorts_data:
-            db.add(short)
+        # 2) Shorts papkada topilgan qo'shimcha fayllarni qo'shish
+        #   short-4, short-5 ... ko'rinishida yaratiladi
+        start_idx = 4
+        used_video_urls = {s.video_url for s in existing_by_id.values() if s.video_url}
+        for file_name in local_video_files:
+            # Agar legacy mapping video_url ga to'g'ri kelsa, uni qayta qo'shmaymiz
+            if file_name in local_video_urls.values():
+                continue
 
-        db.commit()
-        print(f"Seeded {len(shorts_data)} shorts")
+            # Agar bu video_url DB'da bo'lsa, davom etamiz
+            if file_name in used_video_urls:
+                continue
+
+            # Yangi short id topish
+            short_id = f"short-{start_idx}"
+            while short_id in existing_by_id:
+                start_idx += 1
+                short_id = f"short-{start_idx}"
+
+            db.add(
+                ShortVideo(
+                    id=short_id,
+                    user_id="admin-1",
+                    movie_id=None,
+                    author="@imovie_official",
+                    name="iMovie.uz",
+                    avatar="https://picsum.photos/seed/imovie-extra/96/96",
+                    video_url=file_name,
+                    caption="Qo‘shimcha short",
+                    audio="iMovie.uz Original Sound",
+                    location="",
+                    tags=["extra"],
+                    likes=0,
+                    shares=0,
+                    views=0,
+                )
+            )
+            used_video_urls.add(file_name)
+            start_idx += 1
+            changed = True
+
+        if changed:
+            db.commit()
+            print("✅ Shorts seed upsert complete")
+        else:
+            print("ℹ️ Shorts seed: no changes")
+
     except Exception as e:
         print(f"Shorts seeding error: {e}")
         db.rollback()
     finally:
         db.close()
+
 
 
 def sync_deployed_content():

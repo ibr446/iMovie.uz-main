@@ -28,6 +28,10 @@ const DESKTOP_BACKDROPS: BackdropRule[] = [
     patterns: ['bloodhounds', 'ovchi itla'],
     image: '/photos/blood.jfif'
   },
+  {
+    patterns: ['agent kim', 'agent kim'],
+    image: '/photos/agent.jpg'
+  }
 ];
 
 const MOBILE_BACKDROPS: BackdropRule[] = [
@@ -47,6 +51,10 @@ const MOBILE_BACKDROPS: BackdropRule[] = [
     patterns: ['bloodhounds', 'ovchi itla'],
     image: '/photos/blood.jfif'
   },
+  {
+    patterns: ['agent kim', 'agent kim'],
+    image: '/photos/agent.jpg'
+  }
 ];
 
 function getMovieSearchText(movie: Movie): string {
