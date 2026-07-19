@@ -45,15 +45,15 @@ const MOBILE_BACKDROPS: BackdropRule[] = [
   },
   {
     patterns: ['true education', 'haqiqiy ta’lim'],
-    image: '/photos/true.jpg'
+    image: '/photos/true.jfif'
   },
   {
     patterns: ['bloodhounds', 'ovchi itla'],
-    image: '/photos/blood.jfif'
+    image: '/photos/bloodhounds.jfif'
   },
   {
     patterns: ['agent kim', 'agent kim'],
-    image: '/photos/agent.jpg'
+    image: '/photos/agent.jfif'
   }
 ];
 
