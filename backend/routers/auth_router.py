@@ -15,6 +15,7 @@ from auth import (
     create_access_token,
     hash_password,
     require_auth,
+    require_admin,
     validate_password_strength,
     verify_google_id_token,
     verify_password,
@@ -205,3 +206,20 @@ def login_swagger(
 def get_me(user: User = Depends(require_auth), db: Session = Depends(get_db)):
     """Get the current authenticated user's profile."""
     return _build_user_response(user, db)
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def admin_delete_user(
+    user_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete a user (admin only). Cannot delete other admins."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == "admin":
+        raise HTTPException(status_code=403, detail="Cannot delete admin users")
+    db.delete(user)
+    db.commit()
+

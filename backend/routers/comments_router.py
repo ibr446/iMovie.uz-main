@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Comment, Movie, User
-from schemas import CommentCreate, CommentUpdate, CommentResponse
-from auth import require_auth, get_current_user
+from schemas import CommentCreate, CommentUpdate, CommentResponse, AdminCommentResponse
+from auth import require_auth, get_current_user, require_admin
 
 router = APIRouter(prefix="/api/movies", tags=["Comments"])
 
@@ -123,5 +123,54 @@ def delete_comment(
     if comment.user_id != user.id and user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
 
+    db.delete(comment)
+    db.commit()
+
+
+# ── Admin Endpoints ───────────────────────────────────────────────
+
+@router.get("/comments/all", response_model=list[AdminCommentResponse])
+def get_all_comments_admin(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all comments across all movies (admin only)."""
+    comments = (
+        db.query(Comment)
+        .order_by(Comment.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    result = []
+    for c in comments:
+        movie_title = ""
+        if c.movie:
+            movie_title = c.movie.title_en or c.movie.title_uz or ""
+        result.append(
+            AdminCommentResponse(
+                id=c.id,
+                movieId=c.movie_id,
+                movieTitle=movie_title,
+                userId=c.user_id,
+                userName=c.user.name if c.user else "Unknown",
+                userAvatar=c.user.avatar if c.user else "",
+                text=c.text[:200] + ("..." if len(c.text) > 200 else ""),
+                date=c.created_at.strftime("%Y-%m-%d %H:%M") if c.created_at else "",
+                rating=c.rating or 0.0,
+            )
+        )
+    return result
+
+
+@router.delete("/comments/all/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def admin_delete_comment(
+    comment_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete any comment (admin only)."""
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
     db.delete(comment)
     db.commit()

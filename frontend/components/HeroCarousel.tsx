@@ -26,7 +26,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies, onPlay, onInfo }) =
   const activeMovie = movies[current];
 
   return (
-    <div className="relative h-[86svh] min-h-[620px] w-full overflow-hidden md:h-[90vh]">
+    <div className="hero-scope relative h-[86svh] min-h-[620px] w-full overflow-hidden md:h-[90vh]">
       {movies.map((movie, idx) => (
         <div 
           key={movie.id}

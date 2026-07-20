@@ -62,7 +62,7 @@ const Home: React.FC<HomeProps> = ({ onMovieClick, onWatchClick, onCategoryClick
   );
 
   return (
-    <main className="min-h-screen bg-zinc-950">
+<main className="min-h-screen">
       <HeroCarousel 
         movies={featuredMovies} 
         onPlay={onWatchClick} 

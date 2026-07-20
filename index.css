@@ -1,3 +1,25 @@
+:root {
+  --bg-primary: black;
+  --bg-secondary: white;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-color: black;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --card-bg: rgba(255, 255, 255, 0.03);
+}
+
+html[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --text-primary: white;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-color: rgba(15, 23, 42, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --card-bg: rgba(255, 255, 255, 0.5);
+}
+
 html,
 body,
 #root {
@@ -10,67 +32,123 @@ body,
 html[data-theme='dark'],
 html[data-theme='dark'] body,
 html[data-theme='dark'] #root {
-  background: #09090b;
-  color: #f4f4f5;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 html[data-theme='light'],
 html[data-theme='light'] body,
 html[data-theme='light'] #root {
-  background: #ffffff;
-  color: #09090b;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-
-
-
+/* ── Light Mode Fixes ──────────────────────────────────────────── */
 html[data-theme='light'] .bg-zinc-950,
 html[data-theme='light'] .bg-zinc-900,
-html[data-theme='light'] .bg-zinc-900\/50,
-html[data-theme='light'] .bg-zinc-800 {
-  background-color: #ffffff !important;
+html[data-theme='light'] .bg-zinc-900\/50 {
+  background-color: var(--bg-primary) !important;
+}
+
+html[data-theme='light'] .bg-black\/20,
+html[data-theme='light'] .bg-black\/30,
+html[data-theme='light'] .bg-black\/35,
+html[data-theme='light'] .bg-black\/45,
+html[data-theme='light'] .bg-black\/60,
+html[data-theme='light'] .bg-black\/80,
+html[data-theme='light'] .bg-black\/85 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 html[data-theme='light'] .bg-white\/5,
 html[data-theme='light'] .bg-white\/10,
 html[data-theme='light'] .bg-white\/20 {
-  background-color: rgba(9, 9, 11, 0.06) !important;
+  background-color: rgba(15, 23, 42, 0.05) !important;
 }
 
 html[data-theme='light'] .text-white,
-html[data-theme='light'] .text-zinc-100,
+html[data-theme='light'] .text-zinc-100 {
+  color: var(--text-primary) !important;
+}
+
 html[data-theme='light'] .text-zinc-200,
 html[data-theme='light'] .text-zinc-300 {
-  color: #09090b !important;
+  color: var(--text-secondary) !important;
 }
 
 html[data-theme='light'] .text-zinc-400,
-html[data-theme='light'] .text-zinc-500,
+html[data-theme='light'] .text-zinc-500 {
+  color: var(--text-muted) !important;
+}
+
 html[data-theme='light'] .text-zinc-600,
 html[data-theme='light'] .text-zinc-700 {
-  color: #52525b !important;
+  color: #475569 !important;
 }
 
 html[data-theme='light'] .border-white\/5,
 html[data-theme='light'] .border-white\/10,
 html[data-theme='light'] .border-white\/20 {
-  border-color: rgba(24, 24, 27, 0.12) !important;
+  border-color: var(--border-color) !important;
 }
 
-html[data-theme='light'] .glass,
+html[data-theme='light'] .glass {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
+}
+
 html[data-theme='light'] .glass-dark {
-  background: rgba(255, 255, 255, 0.78) !important;
-  border-color: rgba(24, 24, 27, 0.12) !important;
-  box-shadow: 0 20px 60px rgba(24, 24, 27, 0.08);
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
 }
 
 html[data-theme='light'] input,
 html[data-theme='light'] textarea,
 html[data-theme='light'] select {
-  color: #09090b;
+  color: var(--text-primary);
+  background-color: rgba(15, 23, 42, 0.04) !important;
+  border-color: var(--border-color) !important;
 }
 
 html[data-theme='light'] input::placeholder,
 html[data-theme='light'] textarea::placeholder {
-  color: #71717a;
+  color: var(--text-muted);
+}
+
+/* Gradient overlays for images - keep them intact in light mode */
+html[data-theme='light'] .from-black\/85,
+html[data-theme='light'] .via-black\/5,
+html[data-theme='light'] .to-black\/35,
+html[data-theme='light'] .to-black\/85 {
+  /* Keep original gradient for image overlays */
+}
+
+
+/* ── Hero bandresha doim dark theme'da qoladi ────────────────── */
+html[data-theme='light'] .hero-scope .text-white {
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] .hero-scope .text-zinc-200,
+html[data-theme='light'] .hero-scope .text-zinc-400 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+html[data-theme='light'] .hero-scope .border-white\/10,
+html[data-theme='light'] .hero-scope .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html[data-theme='light'] .hero-scope .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-theme='light'] .hero-scope .glass {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: none;
 }

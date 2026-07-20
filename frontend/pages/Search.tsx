@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, SlidersHorizontal, X } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
@@ -40,15 +39,34 @@ const Search: React.FC<SearchProps> = ({ onMovieClick, initialGenre = 'All' }) =
         if (activeGenre !== 'All') params.set('genre', activeGenre);
         const queryStr = params.toString();
         const data = await apiGet<Movie[]>(`/movies${queryStr ? `?${queryStr}` : ''}`);
-        setResults(data);
+        if (data.length > 0) {
+          setResults(data);
+        } else {
+          // API returned empty — fallback to client-side filtering across ALL languages
+          const q = query.toLowerCase().trim();
+          const filtered = movies.filter(movie => {
+            const matchesQuery = !q || 
+              (movie.title.en && movie.title.en.toLowerCase().includes(q)) ||
+              (movie.title.ru && movie.title.ru.toLowerCase().includes(q)) ||
+              (movie.title.uz && movie.title.uz.toLowerCase().includes(q));
+            const matchesGenre = activeGenre === 'All' || movie.genre.includes(activeGenre);
+            return matchesQuery && matchesGenre;
+          });
+          setResults(filtered);
+        }
       } catch (err) {
         console.error('Search failed:', err);
-        // Fallback to client-side filtering
-        setResults(movies.filter(movie => {
-          const matchesQuery = movie.title[lang].toLowerCase().includes(query.toLowerCase());
+        // Fallback to client-side filtering — search across ALL languages
+        const q = query.toLowerCase().trim();
+        const filtered = movies.filter(movie => {
+          const matchesQuery = !q || 
+            (movie.title.en && movie.title.en.toLowerCase().includes(q)) ||
+            (movie.title.ru && movie.title.ru.toLowerCase().includes(q)) ||
+            (movie.title.uz && movie.title.uz.toLowerCase().includes(q));
           const matchesGenre = activeGenre === 'All' || movie.genre.includes(activeGenre);
           return matchesQuery && matchesGenre;
-        }));
+        });
+        setResults(filtered);
       } finally {
         setLoading(false);
       }

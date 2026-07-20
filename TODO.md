@@ -1,6 +1,11 @@
-# TODO
+# Admin Panel - Users, Comments, Shorts ✅
 
-- [x] backend/main.py: lifespan ichida Vercel’da seed/sync har startda ishlamasligi uchun `do_seed`ni DB bo‘sh bo‘lgandagina yoqish
-- [ ] backend/main.py: `SEED_ON_STARTUP` default false bo‘lsin va faqat kerak bo‘lsa yoqilsin
-- [ ] backend/main.py: o‘zgartirishdan keyin Vercel’de redeploy/test (refresh 5-10 min keyin admin qo‘shgan kontent saqlanishini tekshirish)
+## Backend (ALL DONE)
+- `backend/schemas.py` - Added AdminUserResponse, AdminCommentResponse
+- `backend/routers/auth_router.py` - Added DELETE /api/auth/users/{user_id} (admin only, blocks deleting other admins)
+- `backend/routers/users_router.py` - Added GET /api/users/all (admin only)
+- `backend/routers/comments_router.py` - Added GET /api/movies/comments/all + DELETE /api/movies/comments/all/{comment_id} (admin only)
 
+## Frontend (ALL DONE)
+- `data/translations.ts` - Added en/ru/uz translations for all admin UI strings
+- `frontend/pages/Admin.tsx` - Full Users table, Comments table, Shorts table + CRUD modal (add/edit/delete)

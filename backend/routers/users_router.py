@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from database import get_db
 from models import User, Movie, SavedMovie, WatchHistory
-from schemas import MovieResponse, MovieTitle, MovieDescription, PasswordUpdate, StatsResponse, UserResponse, UserUpdate
+from schemas import MovieResponse, MovieTitle, MovieDescription, PasswordUpdate, StatsResponse, UserResponse, UserUpdate, AdminUserResponse
 from auth import require_auth, require_admin, hash_password, validate_password_strength, verify_password
 from routers.movies_router import (
     _detect_audio_urls,
@@ -208,6 +208,25 @@ def clear_history(user: User = Depends(require_auth), db: Session = Depends(get_
     """Clear the current user's watch history."""
     db.query(WatchHistory).filter(WatchHistory.user_id == user.id).delete()
     db.commit()
+
+
+# ── Admin ──────────────────────────────────────────────────────────
+
+@router.get("/all", response_model=list[AdminUserResponse])
+def get_all_users(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Get all users (admin only)."""
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return [
+        AdminUserResponse(
+            id=u.id,
+            name=u.name,
+            email=u.email,
+            avatar=u.avatar or "",
+            role=u.role,
+            created_at=u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at else None,
+        )
+        for u in users
+    ]
 
 
 # ── Admin Stats ───────────────────────────────────────────────────

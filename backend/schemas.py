@@ -242,3 +242,32 @@ class ShortCommentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ── Admin ─────────────────────────────────────────────────────────
+
+class AdminUserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    avatar: str
+    role: str
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AdminCommentResponse(BaseModel):
+    id: str
+    movieId: str
+    movieTitle: str = ""
+    userId: str
+    userName: str
+    userAvatar: str
+    text: str
+    date: str
+    rating: float = 0.0
+
+    class Config:
+        from_attributes = True
